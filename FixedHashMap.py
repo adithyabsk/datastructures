@@ -28,6 +28,9 @@ class FixedHashMap(object):
 		return i
 
 	def set(self, key, value):
+		if not isinstance(key, str):
+			raise Exception("KeyError: Key must be string")
+			return
 		if self.size == self.capacity:
 			raise Exception("MemoryError: The hash map is full")
 			return
@@ -94,7 +97,7 @@ class FixedHashMap(object):
 
 	def __repr__(self):
 		data = [(k, str(self.get(k))) for k in self.keys()]
-		return '{}' if not data else '{'+', '.join('{}: {}'.format(k, v) for k,v in data)+'}'
+		return '{}' if not data else '{'+', '.join('{}: {}'.format(repr(k), v) for k,v in data)+'}'
 
 
 if __name__ == "__main__":
