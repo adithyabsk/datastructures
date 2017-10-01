@@ -3,7 +3,7 @@ Adithya Balaji
 
 ## Introduction
 In its most basic form, hash maps map keys to values. A hash function is used to compute indices which are placed into buckets in a hash table.  
-Ideally, the selected hash function will place each key in a unique bucket. Though _hash collisions_ will occur and need to be handled. The average cost of lookup is independent of the number of indices.
+Ideally, the selected hash function will place each key in a unique bucket. Though *hash collisions* will occur and need to be handled. The average cost of lookup is independent of the number of indices.
 
 ## Hashing
 Hashing distributes keys across an array buckets. Where f(k, array_size) is a hashing function where:  
@@ -26,3 +26,13 @@ Linear probing has the best caching performance but struggles with clustering. D
 
 ## Specific Implementation
 This specific implementation was built in Python. The author made sure to not use primitive dictionaries in any way including in the construction of classes which used slots instead of the primitive dictionary form. The author used open addressing to solve the hash collision issues and used the implementation provided in Knuth Vol. 2 to address this challenge. The specific implementation also used probing was used linear probing during insertion
+
+### Testing the implementation
+Run `$ ./tests.py ` in terminal to run through the unit tests. To manually use the class 
+```python
+import FixedHashMap from FixedHashMap
+```
+
+## Sources
+* [https://en.wikipedia.org/wiki/Hash_table](https://en.wikipedia.org/wiki/Hash_table)
+* [https://en.wikipedia.org/wiki/Linear_probing](https://en.wikipedia.org/wiki/Linear_probing)
