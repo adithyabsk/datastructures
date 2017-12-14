@@ -1,6 +1,4 @@
 # Hash Maps
-Adithya Balaji
-
 ## Introduction
 In its most basic form, hash maps map keys to values. A hash function is used to compute indices which are placed into buckets in a hash table.  
 Ideally, the selected hash function will place each key in a unique bucket. Though *hash collisions* will occur and need to be handled. The average cost of lookup is independent of the number of indices.
