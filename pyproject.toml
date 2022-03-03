@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "datastructures"
+version = "0.1.0"
+description = "Python datastructure implementations"
+authors = ["Adithya Balaji <adithyabsk@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+isort = "^5.10.1"
+pytest = "^7.0.1"
+pytest-cov = "^3.0.0"
+coverage = "^6.3.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
