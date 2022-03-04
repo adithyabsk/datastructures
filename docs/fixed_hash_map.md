@@ -1,15 +1,15 @@
 # Hash Maps
 ## Introduction
-In its most basic form, hash maps map keys to values. A hash function is used to compute indices which are placed into buckets in a hash table.  
+In its most basic form, hash maps map keys to values. A hash function is used to compute indices which are placed into buckets in a hash table.
 Ideally, the selected hash function will place each key in a unique bucket. Though *hash collisions* will occur and need to be handled. The average cost of lookup is independent of the number of indices.
 
 ## Hashing
-Hashing distributes keys across an array buckets. Where f(k, array_size) is a hashing function where:  
+Hashing distributes keys across an array buckets. Where f(k, array_size) is a hashing function where:
 _index_ = f(_key_, _array_size_).
 
 ## Load Factor
-Load factor is defined as:  
-_load_factor_ = _n_/_k_  
+Load factor is defined as:
+_load_factor_ = _n_/_k_
 Where n is the number of entries and k is the number of buckets. As the load factor grows larger, the hash table becomes slower.
 
 ## Open Addressing
