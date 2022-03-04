@@ -18,75 +18,89 @@ def test_add_item(fhm):
 	assert str(fhm) == "{'0': 1}"
 
 
-# class TestFixedHashMap(unittest.TestCase):
-# 	def setUp(self):
-# 		'''Setting up for the test'''
-# 		test_name =  self.shortDescription()
-# 		self.test_fhm = None
-#
-# 		if "error" in test_name.lower():
-# 			self.test_fhm = FixedHashMap(5)
-# 		else:
-# 			self.test_fhm = FixedHashMap()
-#
-# 	def tearDown(self):
-# 		'''Cleaning up after the test'''
-# 		del self.test_fhm
-#
-#
-# 	def test01_add_item(self):
-# 		'''Add an item to the fhm'''
-# 		self.test_fhm['0'] = 1
-# 		self.assertEquals(str(self.test_fhm), '{\'0\': 1}')
-#
-# 	def test02_get_item(self):
-# 		'''Get an item from the fhm'''
-# 		self.test_fhm['0'] = 1
-# 		self.assertEquals(self.test_fhm['0'], 1)
-#
-# 	def test03_add_multiple_items(self):
-# 		'''Add multiple items to the fhm'''
-# 		self.test_fhm['0'] = 1
-# 		self.test_fhm['1'] = 2
-# 		self.assertEquals(str(self.test_fhm), '{\'0\': 1, \'1\': 2}')
-#
-# 	def test04_remove_item(self):
-# 		'''Add then remove items to fhm'''
-# 		self.test_fhm['0'] = 1
-# 		self.assertEquals(str(self.test_fhm), '{\'0\': 1}')
-# 		del self.test_fhm['0']
-# 		self.assertEquals(str(self.test_fhm), "{}")
-#
-# 	def test05_get_load(self):
-# 		'''Get load (default size is 1000)'''
-# 		self.test_fhm['0'] = 1
-# 		self.assertEquals(self.test_fhm.load(), 0.001)
-#
-# 	def test06_get_keys(self):
-# 		'''Get keys from the fhm'''
-# 		self.test_fhm['0'] = 1
-# 		self.test_fhm['1'] = 2
-# 		self.assertEquals(self.test_fhm.keys(), ['0', '1'])
-#
-# 	def test07_get_non_existant_key(self):
-# 		'''Check error: try to get non-existant key'''
-# 		self.assertRaises(Exception, self.test_fhm.get, '0')
-#
-# 	def test08_delete_non_existant_key(self):
-# 		'''Check error: try to remove non-existant key'''
-# 		self.assertRaises(Exception, self.test_fhm.delete, '0')
-#
-# 	def test09_delete_non_existant_key(self):
-# 		'''Check error: try toadd non string key'''
-# 		self.assertRaises(Exception, self.test_fhm.set, 1, 2)
-#
-# 	def test10_add_more_than_size(self):
-# 		'''Check error: try to add more than size of fhm'''
-# 		for i in range(5):
-# 			self.test_fhm[str(i)] = i+1
-# 		self.assertRaises(Exception, self.test_fhm.set, '5', 6)
+def test_get_item(fhm):
+	fhm['0'] = 1
+	assert fhm['0'] == 1
 
 
-# if __name__ == '__main__':
-# 	suite = unittest.TestLoader().loadTestsFromTestCase(TestFixedHashMap)
-# 	unittest.TextTestRunner(verbosity=2).run(suite)
+def test_replace_item(fhm):
+	fhm['0'] = 1
+	fhm['0'] = 2
+	assert fhm['0'] == 2
+
+
+def test_repr(fhm):
+	fhm['0'] = 1
+	assert repr(fhm) == "FixedHashMap({'0': 1})"
+
+
+def test_add_multiple_item(fhm):
+	fhm['0'] = 1
+	fhm['1'] = 2
+	# note: we cannot just check the string representation because python
+	#       hashing is only deterministic within a single run
+	assert fhm['0'] == 1
+	assert fhm['1'] == 2
+
+
+def test_remove_item(fhm):
+	fhm['0'] = 1
+	del fhm['0']
+	assert str(fhm) == "{}"
+
+
+def test_get_load(fhm):
+	# note: default hash map size is 1000
+	fhm['0'] = 1
+	assert fhm.load() == 0.001
+
+
+def test_get_keys(fhm):
+	fhm['0'] = 1
+	fhm['1'] = 2
+	assert sorted(fhm.keys()) == ['0', '1']
+
+
+def test_non_existent_key(fhm):
+	with pytest.raises(KeyError) as e:
+		_ = fhm['0']
+
+	assert "could not find" in str(e)
+
+	with pytest.raises(KeyError) as e2:
+		del fhm['0']
+
+	assert "could not find" in str(e2)
+
+
+def test_memory_error():
+	from datastructures import FixedHashMap
+
+	fhm = FixedHashMap(2)
+	fhm[0] = 1
+	fhm[1] = 2
+	with pytest.raises(MemoryError) as e:
+		fhm[2] = 3
+
+	assert "the hash map is full" in str(e)
+
+
+def test_unhashable_key(fhm):
+	with pytest.raises(ValueError) as e:
+		fhm[[1, 2, 3]] = 10
+
+	assert "key must be hashable" in str(e)
+
+
+def test_non_existent_key_full_hash_map():
+	from datastructures import FixedHashMap
+
+	fhm = FixedHashMap(2)
+	fhm[0] = 1
+	fhm[1] = 2
+
+	with pytest.raises(KeyError) as e:
+		_ = fhm[2]
+
+	assert "could not find key" in str(e)
+

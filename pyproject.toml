@@ -15,6 +15,24 @@ pytest = "^7.0.1"
 pytest-cov = "^3.0.0"
 coverage = "^6.3.2"
 
+[tool.pytest.ini_options]
+# use --no-cov in PyCharm to override pytest-cov and enable builtin coverage
+addopts = "-v -x --cov=datastructures --cov-report=term --cov-report=html"
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "tests/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
+]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

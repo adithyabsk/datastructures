@@ -26,8 +26,11 @@ class FixedHashMap:
 			"""Evaluate to `False` if the key is not set."""
 			return False if self.key is None else True
 
-		def __repr__(self):
-			return 'None' if self.key is None else f'{self.key}: {self.value}'
+		def __str__(self):  # pragma: no cover
+			return '' if self.key is None else f'{self.key}: {self.value}'
+
+		def __repr__(self):  # pragma: no cover
+			return f"HashItem({self})"
 
 	__slots__ = ("capacity", "size", "data")
 
@@ -47,25 +50,30 @@ class FixedHashMap:
 			or self.data[hash_idx].is_tombstone
 		):
 			hash_idx = (hash_idx+1) % self.capacity
+			# this prevents an infinite loop when getting a non-existent key
+			# when the hash map is full
 			count += 1
 			if count >= self.size:
 				raise KeyError(f"could not find key: {key}")
 		return hash_idx
 
-	def get_hash_item(self, key):
+	def get_existing_hash_item(self, key):
 		key_idx = self._find_slot(key)
-		if self.data[key_idx] is not None:
+		if self.data[key_idx]:
 			return self.data[key_idx]
 		else:
 			raise KeyError(f"could not find key: {key}")
 
 	def get(self, key):
-		return self.get_hash_item(key).value
+		return self.get_existing_hash_item(key).value
 
 	def set(self, key, value):
 		if self.size >= self.capacity:
 			raise MemoryError("the hash map is full")
-		hash_item = self.get_hash_item(key)
+		# we don't use get_hash item here because we are okay with using up
+		# an empty slot
+		key_idx = self._find_slot(key)
+		hash_item = self.data[key_idx]
 		if hash_item:
 			hash_item.set(hash_item.key, value)
 		else:
@@ -75,7 +83,7 @@ class FixedHashMap:
 	def delete(self, key):
 		# use tombstone deletion
 		# https://stackoverflow.com/a/60644631/3262054
-		hash_item = self.get_hash_item(key)
+		hash_item = self.get_existing_hash_item(key)
 		hash_item.clear()
 		self.size -= 1
 
@@ -95,33 +103,20 @@ class FixedHashMap:
 		return self.delete(key)
 
 	def __repr__(self):
-		data = [
-			(str(k), str(self.get(k)))
+		return f"FixedHashMap({self})"
+
+	def __str__(self):
+		tuple_data = [
+			(k, self.get(k))
 			for k in self.keys()
 			if k is not None
 		]
-		return '{}' if not data else '{'+', '.join('{}: {}'.format(repr(k), v) for k,v in data)+'}'
-
-
-if __name__ == "__main__":
-	def print_stats(h):
-		print('fhm.load: {}'.format(fhm.load()))
-		print('fhm: {}'.format(fhm))
-		print('')
-
-	test_size = 2
-	fhm = FixedHashMap(test_size)
-	print('Initialize Hash map of size {}\n'.format(test_size))
-	for i in range(test_size+1):
-		print('Try to add (\'{}\': {})'.format(str(i), i+1))
-		try: fhm[str(i)] = i+1
-		except Exception as e: print(e)
-		print_stats(fhm)
-
-	print("\n\n")
-
-	for i in range(test_size+1):
-		print('Try to delete key \'{}\''.format(str(i)))
-		try: del fhm[str(i)]
-		except Exception as e: print(e)
-		print_stats(fhm)
+		if not tuple_data:
+			return '{}'
+		else:
+			fhm_rep = "{"
+			fhm_rep += ', '.join(
+				f"{k!r}: {v!r}" for k, v in tuple_data
+			)
+			fhm_rep += "}"
+			return fhm_rep
