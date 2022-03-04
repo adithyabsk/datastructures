@@ -44,16 +44,16 @@ class FixedHashMap:
             hash_idx = hash(key) % self.capacity
         except TypeError:
             raise ValueError("key must be hashable")
-        count = 0
+        count = 1
         while (self.data[hash_idx] and (self.data[hash_idx].key != key)) or self.data[
             hash_idx
         ].is_tombstone:
             hash_idx = (hash_idx + 1) % self.capacity
             # this prevents an infinite loop when getting a non-existent key
             # when the hash map is full
-            count += 1
             if count >= self.size:
                 raise KeyError(f"could not find key: {key}")
+            count += 1
         return hash_idx
 
     def get_existing_hash_item(self, key):

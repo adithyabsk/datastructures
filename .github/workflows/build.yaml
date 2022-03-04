@@ -1,0 +1,55 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+    - uses: pre-commit/action@v2.0.2
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v2
+      # Temporarily add requirements.txt until this PR is merged
+      # https://github.com/actions/setup-python/pull/281
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - run: |
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Run tests
+        run : pytest
+
+      - name: Coverage Badge
+        uses: tj-actions/coverage-badge-py@v1.6
+      - name: Verify Changed files
+        uses: tj-actions/verify-changed-files@v6
+        id: changed_files
+        with:
+          files: coverage.svg
+      - name: Commit files
+        if: steps.changed_files.outputs.files_changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add coverage.svg
+          git commit -m "Updated coverage.svg"
+      - name: Push changes
+        if: steps.changed_files.outputs.files_changed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          branch: ${{ github.ref }}
