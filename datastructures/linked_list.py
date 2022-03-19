@@ -30,14 +30,30 @@ class LinkedList:
             self.child = None
 
         def __del__(self):
-            self.parent.child = self.child
-            self.child.parent = self.parent
+            if self.parent is not None:
+                self.parent.child = self.child
+            if self.child is not None:
+                self.child.parent = self.parent
             self.clear()
 
-    def __init__(self):
+        def __eq__(self, other):
+            return self.val == other.val
+
+        def __repr__(self):
+            return f"LinkedList.Node({self})"
+
+        def __str__(self):
+            return str(self.val)
+
+    def __init__(self, items=None):
+        if hasattr(self, "root"):
+            # init is being called directly for the second time
+            self.clear()
         self.root = None
         self.tail = None
         self.count = 0
+        if items is not None:
+            self.extend(items)
 
     def append(self, val):
         if self.tail is None:
@@ -58,7 +74,7 @@ class LinkedList:
         self.count += 1
 
     def clear(self):
-        for node in self:
+        for node in self._iter():
             node.clear()
         self.root = self.tail = None
         self.count = 0
@@ -77,6 +93,7 @@ class LinkedList:
         node_val = self.tail.val
         if self.tail.parent is not None:
             self.tail = self.tail.parent
+            self.tail.child = None
         else:
             self.tail = self.root = None
         self.count -= 1
@@ -88,6 +105,7 @@ class LinkedList:
         node_val = self.root.val
         if self.root.child is not None:
             self.root = self.root.child
+            self.root.parent = None
         else:
             self.root = self.tail = None
         self.count -= 1
@@ -127,12 +145,15 @@ class LinkedList:
                 if (self.count - 1 - i) == index:
                     return node.val
 
-    def __iter__(self):
+    def _iter(self):
         node = self.root
         while node is not None:
-            val = node.val
+            yield node
             node = node.child
-            yield val
+
+    def __iter__(self):
+        for n in self._iter():
+            yield n.val
 
     def __reversed__(self):
         # we could just use the default implementation of reversed that uses
@@ -143,3 +164,12 @@ class LinkedList:
             val = node.val
             node = node.parent
             yield val
+
+    def __eq__(self, other):
+        return all(s == o for s, o in zip(self, other))
+
+    def __str__(self):
+        return f"[{', '.join(str(n) for n in self)}]"
+
+    def __repr__(self):
+        return f"LinkedList({self})"
