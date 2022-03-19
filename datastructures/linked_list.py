@@ -45,17 +45,29 @@ class LinkedList:
         def __str__(self):
             return str(self.val)
 
-    def __init__(self, items=None):
+    def __init__(self, iterable=None, maxlen=None):
+        if maxlen is not None and maxlen < 0:
+            raise ValueError("maxlen must be > 0")
         if hasattr(self, "root"):
             # init is being called directly for the second time
             self.clear()
         self.root = None
         self.tail = None
         self.count = 0
-        if items is not None:
-            self.extend(items)
+        self.maxlen = maxlen
+        if iterable is not None:
+            self.extend(iterable)
+
+    def _check_maxlen(self):
+        """Check if we need to adjust items based on the maxlen"""
+        if self.maxlen is not None and self.count >= self.maxlen:
+            return True
+        else:
+            return False
 
     def append(self, val):
+        if self._check_maxlen():
+            self.popleft()
         if self.tail is None:
             self.root = self.tail = self.Node(val)
         else:
@@ -65,6 +77,8 @@ class LinkedList:
         self.count += 1
 
     def appendleft(self, val):
+        if self._check_maxlen():
+            self.pop()
         if self.root is None:
             self.root = self.tail = self.Node(val)
         else:
@@ -169,7 +183,21 @@ class LinkedList:
         return all(s == o for s, o in zip(self, other))
 
     def __str__(self):
-        return f"[{', '.join(str(n) for n in self)}]"
+        # CPython has some magic code to traverse the stack to check if an
+        # object is self referential. We could replicate that functionality with
+        # inspect, but that would make this function waaaay to complicated.
+        # Instead, we just truncate any LinkedList that refers to another
+        # LinkedList.
+        # https://stackoverflow.com/a/15849554/3262054
+        inner = ", ".join(
+            str(n) if not isinstance(n, LinkedList) else "LinkedList([...])"
+            for n in self
+        )
+        return f"[{inner}]"
 
     def __repr__(self):
-        return f"LinkedList({self})"
+        ret = f"LinkedList({self}"
+        if self.maxlen is not None:
+            ret += f", maxlen={self.maxlen}"
+        ret += ")"
+        return ret
