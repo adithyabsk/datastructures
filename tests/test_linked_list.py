@@ -66,3 +66,21 @@ def test_maxlen():
     assert repr(d)[-50:] == "196, 197, 198, 199, LinkedList([...])], maxlen=10)"
     d = LinkedList(range(10), maxlen=None)
     assert repr(d) == "LinkedList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])"
+
+
+def test_maxlen_zero():
+    from datastructures import LinkedList
+
+    it = iter(range(100))
+    LinkedList(it, maxlen=0)
+    assert list(it) == []
+
+    it = iter(range(100))
+    d = LinkedList(maxlen=0)
+    d.extend(it)
+    assert list(it) == []
+
+    it = iter(range(100))
+    d = LinkedList(maxlen=0)
+    d.extendleft(it)
+    assert list(it) == []

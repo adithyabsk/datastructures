@@ -58,16 +58,12 @@ class LinkedList:
         if iterable is not None:
             self.extend(iterable)
 
-    def _check_maxlen(self):
-        """Check if we need to adjust items based on the maxlen"""
-        if self.maxlen is not None and self.count >= self.maxlen:
-            return True
-        else:
-            return False
-
     def append(self, val):
-        if self._check_maxlen():
-            self.popleft()
+        if self.maxlen is not None and self.count >= self.maxlen:
+            if self.maxlen == 0:
+                return
+            else:
+                self.popleft()
         if self.tail is None:
             self.root = self.tail = self.Node(val)
         else:
@@ -77,8 +73,11 @@ class LinkedList:
         self.count += 1
 
     def appendleft(self, val):
-        if self._check_maxlen():
-            self.pop()
+        if self.maxlen is not None and self.count >= self.maxlen:
+            if self.maxlen == 0:
+                return
+            else:
+                self.pop()
         if self.root is None:
             self.root = self.tail = self.Node(val)
         else:
