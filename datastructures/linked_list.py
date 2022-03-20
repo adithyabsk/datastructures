@@ -54,9 +54,13 @@ class LinkedList:
         self.root = None
         self.tail = None
         self.count = 0
-        self.maxlen = maxlen
+        self._maxlen = maxlen
         if iterable is not None:
             self.extend(iterable)
+
+    @property
+    def maxlen(self):
+        return self._maxlen
 
     def append(self, val):
         if self.maxlen is not None and self.count >= self.maxlen:

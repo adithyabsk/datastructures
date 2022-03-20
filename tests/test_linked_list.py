@@ -84,3 +84,17 @@ def test_maxlen_zero():
     d = LinkedList(maxlen=0)
     d.extendleft(it)
     assert list(it) == []
+
+
+def test_maxlen_attribute():
+    from datastructures import LinkedList
+
+    assert LinkedList().maxlen is None
+    assert LinkedList("abc").maxlen is None
+    assert LinkedList("abc", maxlen=4).maxlen == 4
+    assert LinkedList("abc", maxlen=2).maxlen == 2
+    assert LinkedList("abc", maxlen=0).maxlen == 0
+
+    with pytest.raises(AttributeError):
+        d = LinkedList("abc")
+        d.maxlen = 10
