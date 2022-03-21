@@ -145,3 +145,23 @@ def test_count():
     d.rotate(1)
     assert d.count(1) == 0
     assert d.count(None) == 16
+
+
+def test_comparisons():
+    from datastructures import LinkedList
+
+    d = LinkedList("xabc")
+    d.popleft()
+    for e in [d, LinkedList("abc"), LinkedList("ab"), LinkedList(), list(d)]:
+        assert (d == e) == (type(d) == type(e) and list(d) == list(e))
+        assert (d != e) == (not (type(d) == type(e) and list(d) == list(e)))
+
+    args = map(LinkedList, ("", "a", "b", "ab", "ba", "abc", "xba", "xabc", "cba"))
+    for x in args:
+        for y in args:
+            assert (x == y) == (list(x) == list(y))
+            assert (x != y) == (list(x) != list(y))
+            assert (x < y) == (list(x) < list(y))
+            assert (x <= y) == (list(x) <= list(y))
+            assert (x > y) == (list(x) > list(y))
+            assert (x >= y) == (list(x) >= list(y))

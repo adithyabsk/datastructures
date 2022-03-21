@@ -1,5 +1,7 @@
 """A doubly linked list."""
 
+from functools import total_ordering
+
 # when you're bored and have some time, finish these TODOs
 # TODO: add support for arbitrary index popping to DRY the implemenation of
 #       pop and popleft
@@ -8,7 +10,12 @@
 # TODO: add support for __mul__
 # TODO: add support for __imul__
 
+# Note: total ordering generates all the rich comparison operators given
+#       `__eq__` and `__lt__`.
+#       https://docs.python.org/3/library/functools.html#functools.total_ordering
 
+
+@total_ordering
 class LinkedList:
     """A pure python implementation of collections.deque"""
 
@@ -208,7 +215,20 @@ class LinkedList:
             yield val
 
     def __eq__(self, other):
-        return all(s == o for s, o in zip(self, other))
+        if isinstance(other, LinkedList):
+            return len(self) == len(other) and all(s == o for s, o in zip(self, other))
+        else:
+            return False
+
+    def __lt__(self, other):
+        if isinstance(other, LinkedList):
+            return len(self) < len(other) or (
+                len(self) == len(other) and all(s < o for s, o in zip(self, other))
+            )
+        else:
+            raise TypeError(
+                f"supported between instances of '{type(self)}' and " f"'{type(other)}'"
+            )
 
     def __str__(self):
         # CPython has some magic code to traverse the stack to check if an
