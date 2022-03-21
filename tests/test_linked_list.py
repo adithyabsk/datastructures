@@ -98,3 +98,50 @@ def test_maxlen_attribute():
     with pytest.raises(AttributeError):
         d = LinkedList("abc")
         d.maxlen = 10
+
+
+def test_count():
+    from datastructures import LinkedList
+
+    for s in ("", "abracadabra", "simsalabim" * 500 + "abc"):
+        s = list(s)
+        d = LinkedList(s)
+        for letter in "abcdefghijklmnopqrstuvwxyz":
+            assert s.count(letter) == d.count(letter)
+
+    with pytest.raises(TypeError):
+        d.count()
+
+    with pytest.raises(TypeError):
+        d.count(1, 2)
+
+    class BadCompare:
+        def __eq__(self, other):
+            raise ArithmeticError
+
+    d = LinkedList([1, 2, BadCompare(), 3])
+    with pytest.raises(ArithmeticError):
+        d.count(2)
+
+    d = LinkedList([1, 2, 3])
+    with pytest.raises(ArithmeticError):
+        d.count(BadCompare())
+
+    class MutatingCompare:
+        def __eq__(self, other):
+            self.d.pop()
+            return True
+
+    m = MutatingCompare()
+    d = LinkedList([1, 2, 3, m, 4, 5])
+    m.d = d
+    with pytest.raises(RuntimeError):
+        d.count(3)
+
+    # block advance failed after rotation aligned elements on right side of block
+    d = LinkedList([None] * 16)
+    for _ in range(len(d)):
+        d.rotate(-1)
+    d.rotate(1)
+    assert d.count(1) == 0
+    assert d.count(None) == 16

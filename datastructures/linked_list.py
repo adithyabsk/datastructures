@@ -1,6 +1,8 @@
 """A doubly linked list."""
 
 # when you're bored and have some time, finish these TODOs
+# TODO: add support for arbitrary index popping to DRY the implemenation of
+#       pop and popleft
 # TODO: add support for copy and deepcopy
 # TODO: add support for __add__
 # TODO: add support for __mul__
@@ -53,8 +55,9 @@ class LinkedList:
             self.clear()
         self.root = None
         self.tail = None
-        self.count = 0
+        self._total_items = 0
         self._maxlen = maxlen
+        self.__is_iterating = False
         if iterable is not None:
             self.extend(iterable)
 
@@ -62,8 +65,13 @@ class LinkedList:
     def maxlen(self):
         return self._maxlen
 
+    def _check_not_iterating(self):
+        if self.__is_iterating:
+            raise RuntimeError("linked list mutated during iteration")
+
     def append(self, val):
-        if self.maxlen is not None and self.count >= self.maxlen:
+        self._check_not_iterating()
+        if self.maxlen is not None and self._total_items >= self.maxlen:
             if self.maxlen == 0:
                 return
             else:
@@ -74,10 +82,11 @@ class LinkedList:
             node = self.Node(val)
             self.tail.append(node)
             self.tail = node
-        self.count += 1
+        self._total_items += 1
 
     def appendleft(self, val):
-        if self.maxlen is not None and self.count >= self.maxlen:
+        self._check_not_iterating()
+        if self.maxlen is not None and self._total_items >= self.maxlen:
             if self.maxlen == 0:
                 return
             else:
@@ -88,13 +97,22 @@ class LinkedList:
             node = self.Node(val)
             self.root.appendleft(node)
             self.root = node
-        self.count += 1
+        self._total_items += 1
+
+    def count(self, x):
+        total = 0
+        for item in self:
+            if item == x:
+                total += 1
+
+        return total
 
     def clear(self):
+        self._check_not_iterating()
         for node in self._iter():
             node.clear()
         self.root = self.tail = None
-        self.count = 0
+        self._total_items = 0
 
     def extend(self, iterable):
         for i in iterable:
@@ -105,7 +123,8 @@ class LinkedList:
             self.appendleft(i)
 
     def pop(self):
-        if self.tail is None:
+        self._check_not_iterating()
+        if len(self) == 0:
             raise ValueError("linked list is empty")
         node_val = self.tail.val
         if self.tail.parent is not None:
@@ -113,11 +132,13 @@ class LinkedList:
             self.tail.child = None
         else:
             self.tail = self.root = None
-        self.count -= 1
+        self._total_items -= 1
         return node_val
 
     def popleft(self):
-        if self.root is None:
+        if self.__is_iterating:
+            raise RuntimeError("linked list mutated during iteration")
+        if len(self) == 0:
             raise ValueError("linked list is empty")
         node_val = self.root.val
         if self.root.child is not None:
@@ -125,15 +146,17 @@ class LinkedList:
             self.root.parent = None
         else:
             self.root = self.tail = None
-        self.count -= 1
+        self._total_items -= 1
         return node_val
 
     def reverse(self):
+        self._check_not_iterating()
         for node in self:
             node.child, node.parent = node.parent, node.child
         self.root, self.tail = self.tail, self.root
 
     def rotate(self, n=1):
+        self._check_not_iterating()
         if n > 0:
             for _ in range(n):
                 self.appendleft(self.pop())
@@ -142,16 +165,16 @@ class LinkedList:
                 self.append(self.popleft())
 
     def __len__(self):
-        return self.count
+        return self._total_items
 
     def __getitem__(self, index):
-        if index >= self.count:
+        if index >= self._total_items:
             raise IndexError("index out of range")
         # we need this conditional so that we can optimally reach indices
         # on the other side of the doubly linked list without having to iterate
         # over the entire array
         # TODO: scrutinize this conditional for an off by one error
-        iterate_forward = ((self.count - 1) // 2) - index >= 0
+        iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
             for i, node in enumerate(self):
                 if i == index:
@@ -159,7 +182,7 @@ class LinkedList:
         else:
             # TODO: scrutinize this iterator for an off by one error
             for i, node in enumerate(reversed(self)):
-                if (self.count - 1 - i) == index:
+                if (self._total_items - 1 - i) == index:
                     return node.val
 
     def _iter(self):
@@ -169,8 +192,10 @@ class LinkedList:
             node = node.child
 
     def __iter__(self):
+        self.__is_iterating = True
         for n in self._iter():
             yield n.val
+        self.__is_iterating = False
 
     def __reversed__(self):
         # we could just use the default implementation of reversed that uses
