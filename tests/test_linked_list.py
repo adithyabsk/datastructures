@@ -165,3 +165,39 @@ def test_comparisons():
             assert (x <= y) == (list(x) <= list(y))
             assert (x > y) == (list(x) > list(y))
             assert (x >= y) == (list(x) >= list(y))
+
+
+def test_contains():
+    from datastructures import LinkedList
+
+    class BadCmp:
+        def __eq__(self, other):
+            raise RuntimeError
+
+    class MutateCmp:
+        def __init__(self, deque, result):
+            self.deque = deque
+            self.result = result
+
+        def __eq__(self, other):
+            self.deque.clear()
+            return self.result
+
+    n = 200
+
+    d = LinkedList(range(n))
+    for i in range(n):
+        assert i in d
+    assert (n + 1) not in d
+
+    # Test detection of mutation during iteration
+    d = LinkedList(range(n))
+    d[n // 2] = MutateCmp(d, False)
+    with pytest.raises(RuntimeError):
+        n in d  # noqa: B015
+
+    # Test detection of comparison exceptions
+    d = LinkedList(range(n))
+    d[n // 2] = BadCmp()
+    with pytest.raises(RuntimeError):
+        n in d  # noqa: B015

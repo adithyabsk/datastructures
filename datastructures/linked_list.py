@@ -174,7 +174,7 @@ class LinkedList:
     def __len__(self):
         return self._total_items
 
-    def __getitem__(self, index):
+    def _getnode(self, index):
         if index >= self._total_items:
             raise IndexError("index out of range")
         # we need this conditional so that we can optimally reach indices
@@ -183,36 +183,46 @@ class LinkedList:
         # TODO: scrutinize this conditional for an off by one error
         iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
-            for i, node in enumerate(self):
+            for i, node in enumerate(self._iter()):
                 if i == index:
-                    return node.val
+                    return node
         else:
             # TODO: scrutinize this iterator for an off by one error
-            for i, node in enumerate(reversed(self)):
+            for i, node in enumerate(self._iter(reverse=True)):
                 if (self._total_items - 1 - i) == index:
-                    return node.val
+                    return node
 
-    def _iter(self):
-        node = self.root
-        while node is not None:
-            yield node
-            node = node.child
+    def __getitem__(self, index):
+        return self._getnode(index).val
+
+    def __setitem__(self, index, value):
+        node = self._getnode(index)
+        node.val = value
+
+    def _iter(self, reverse=False):
+        self.__is_iterating = True
+        if not reverse:
+            node = self.root
+            while node is not None:
+                yield node
+                node = node.child
+        else:
+            node = self.tail
+            while node is not None:
+                yield node
+                node = node.parent
+        self.__is_iterating = False
 
     def __iter__(self):
-        self.__is_iterating = True
         for n in self._iter():
             yield n.val
-        self.__is_iterating = False
 
     def __reversed__(self):
         # we could just use the default implementation of reversed that uses
         # __len__ and __getitem__, but this is likely more optimal
         # TODO: validate the above assumption
-        node = self.tail
-        while node is not None:
-            val = node.val
-            node = node.parent
-            yield val
+        for node in self.iter(reverse=True):
+            yield node.val
 
     def __eq__(self, other):
         if isinstance(other, LinkedList):
