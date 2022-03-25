@@ -201,3 +201,113 @@ def test_contains():
     d[n // 2] = BadCmp()
     with pytest.raises(RuntimeError):
         n in d  # noqa: B015
+
+
+def test_contains_count_stop_crashes():
+    from datastructures import LinkedList
+
+    class A:
+        def __eq__(self, other):
+            d.clear()
+            return NotImplemented
+
+    d = LinkedList([A(), A()])
+    with pytest.raises(RuntimeError):
+        _ = 3 in d
+    d = LinkedList([A(), A()])
+    with pytest.raises(RuntimeError):
+        _ = d.count(3)
+
+
+def test_extend():
+    from datastructures import LinkedList
+
+    d = LinkedList("a")
+    with pytest.raises(TypeError):
+        d.extend(1)
+    d.extend("bcd")
+    assert list(d) == list("abcd")
+    d.extend(d)
+    assert list(d) == list("abcdabcd")
+
+
+def test_add():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    e = LinkedList("abc")
+    f = LinkedList("def")
+    assert d + d == LinkedList()
+    assert e + f == LinkedList("abcdef")
+    assert e + e == LinkedList("abcabc")
+    assert e + d == LinkedList("abc")
+    assert d + e == LinkedList("abc")
+    assert d + d == LinkedList()
+    assert e + d == LinkedList("abc")
+    assert d + e == LinkedList("abc")
+
+    g = LinkedList("abcdef", maxlen=4)
+    h = LinkedList("gh")
+    assert g + h == LinkedList("efgh")
+
+    with pytest.raises(TypeError):
+        LinkedList("abc") + "def"
+
+
+def test_iadd():
+    from datastructures import LinkedList
+
+    d = LinkedList("a")
+    d += "bcd"
+    assert list(d) == list("abcd")
+    d += d
+    assert list(d) == list("abcdabcd")
+
+
+def test_extendleft():
+    from datastructures import LinkedList
+
+    def fail():
+        raise SyntaxError
+
+    d = LinkedList("a")
+    with pytest.raises(TypeError):
+        d.extendleft(1)
+    d.extendleft("bcd")
+    assert list(d) == list(reversed("abcd"))
+    d.extendleft(d)
+    assert list(d) == list("abcddcba")
+    d = LinkedList()
+    d.extendleft(range(1000))
+    assert list(d) == list(reversed(range(1000)))
+    with pytest.raises(SyntaxError):
+        d.extendleft(fail())
+
+
+def test_getitem():
+    import random
+
+    from datastructures import LinkedList
+
+    random.seed(0)
+
+    n = 200
+    d = LinkedList(range(n))
+    cmp_list = list(range(n))
+    for i in range(n):
+        d.popleft()
+        cmp_list.pop(0)
+        if random.random() < 0.5:
+            d.append(i)
+            cmp_list.append(i)
+        for j in range(1 - len(cmp_list), len(cmp_list)):
+            assert d[j] == cmp_list[j]
+
+    d = LinkedList("superman")
+    assert d[0] == "s"
+    assert d[-1] == "n"
+    d = LinkedList()
+    with pytest.raises(IndexError):
+        d.__getitem__(0)
+    with pytest.raises(IndexError):
+        d.__getitem__(-1)

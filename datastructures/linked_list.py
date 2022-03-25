@@ -122,11 +122,15 @@ class LinkedList:
         self._total_items = 0
 
     def extend(self, iterable):
-        for i in iterable:
+        # iterate over the data in advance in case iterable is self
+        tmp_data = [i for i in iterable]
+        for i in tmp_data:
             self.append(i)
 
     def extendleft(self, iterable):
-        for i in iterable:
+        # iterate over the data in advance in case iterable is self
+        tmp_data = [i for i in iterable]
+        for i in tmp_data:
             self.appendleft(i)
 
     def pop(self):
@@ -175,21 +179,26 @@ class LinkedList:
         return self._total_items
 
     def _getnode(self, index):
-        if index >= self._total_items:
+        if index >= self._total_items or index < -self._total_items:
             raise IndexError("index out of range")
+        if index < 0:
+            index = self._total_items + index
         # we need this conditional so that we can optimally reach indices
         # on the other side of the doubly linked list without having to iterate
         # over the entire array
-        # TODO: scrutinize this conditional for an off by one error
         iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
             for i, node in enumerate(self._iter()):
                 if i == index:
+                    # Since we exit out of the generator early, (before
+                    # StopIteration has been raised, we don't actually set the
+                    # `__is_iterating` to false, so have to manually do it here
+                    self.__is_iterating = False
                     return node
         else:
-            # TODO: scrutinize this iterator for an off by one error
             for i, node in enumerate(self._iter(reverse=True)):
                 if (self._total_items - 1 - i) == index:
+                    self.__is_iterating = False
                     return node
 
     def __getitem__(self, index):
@@ -239,6 +248,20 @@ class LinkedList:
             raise TypeError(
                 f"supported between instances of '{type(self)}' and " f"'{type(other)}'"
             )
+
+    def __add__(self, other):
+        if isinstance(other, LinkedList):
+            ret = LinkedList(self, maxlen=self.maxlen)
+            ret.extend(other)
+            return ret
+        else:
+            raise TypeError(
+                f'can only concatenate deque (not "{type(other)}") to deque'
+            )
+
+    def __iadd__(self, other):
+        self.extend(other)
+        return self
 
     def __str__(self):
         # CPython has some magic code to traverse the stack to check if an
