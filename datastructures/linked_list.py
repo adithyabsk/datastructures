@@ -45,13 +45,13 @@ class LinkedList:
                 self.child.parent = self.parent
             self.clear()
 
-        def __eq__(self, other):
+        def __eq__(self, other):  # pragma: no cover
             return self.val == other.val
 
-        def __repr__(self):
+        def __repr__(self):  # pragma: no cover
             return f"LinkedList.Node({self})"
 
-        def __str__(self):
+        def __str__(self):  # pragma: no cover
             return str(self.val)
 
     def __init__(self, iterable=None, maxlen=None):
@@ -175,14 +175,57 @@ class LinkedList:
             for _ in range(-n):
                 self.append(self.popleft())
 
+    def _rectify_negative_index(self, idx):
+        if idx < 0:
+            idx = self._total_items + idx
+        return idx
+
+    def index(self, x, start=None, stop=None):
+        if start is None:
+            start = 0
+        if stop is None:
+            stop = self._total_items
+        if not (start >= self._total_items or stop < -self._total_items):
+            start = self._rectify_negative_index(start)
+            stop = self._rectify_negative_index(stop)
+            for idx, val in enumerate(self):
+                if idx < start:
+                    continue
+                if idx >= stop:
+                    break
+                if val == x:
+                    self.__is_iterating = False
+                    return idx
+        raise ValueError(f"{x} is not in the LinkedList")
+
+    def insert(self, i, x):
+        if self.maxlen is not None and self._total_items >= self.maxlen:
+            raise IndexError("LinkedList already at its maximum size")
+        if i < -self._total_items:
+            i = 0
+        if i >= self._total_items:
+            i = self._total_items
+        i = self._rectify_negative_index(i)
+        if i == 0:
+            self.appendleft(x)
+        elif i == self._total_items:
+            self.append(x)
+        else:
+            parent_node = self._getnode(i - 1)
+            # current node at i will become i+1
+            child_node = self._getnode(i)
+            new_node = self.Node(x)
+            parent_node.append(new_node)
+            new_node.append(child_node)
+            self._total_items += 1
+
     def __len__(self):
         return self._total_items
 
     def _getnode(self, index):
         if index >= self._total_items or index < -self._total_items:
             raise IndexError("index out of range")
-        if index < 0:
-            index = self._total_items + index
+        index = self._rectify_negative_index(index)
         # we need this conditional so that we can optimally reach indices
         # on the other side of the doubly linked list without having to iterate
         # over the entire array
@@ -202,6 +245,8 @@ class LinkedList:
                     return node
 
     def __getitem__(self, index):
+        if not isinstance(index, int):
+            raise TypeError(f"sequence index must be integer, not '{type(index)}'")
         return self._getnode(index).val
 
     def __setitem__(self, index, value):

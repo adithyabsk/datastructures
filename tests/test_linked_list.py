@@ -8,6 +8,21 @@ import pytest
 #       https://github.com/python/cpython/blob/main/Lib/test/test_deque.py
 
 
+class MutateCmp:
+    def __init__(self, deque, result):
+        self.deque = deque
+        self.result = result
+
+    def __eq__(self, other):
+        self.deque.clear()
+        return self.result
+
+
+class BadCmp:
+    def __eq__(self, other):
+        raise RuntimeError
+
+
 def test_basics():
     from datastructures import LinkedList
 
@@ -115,17 +130,17 @@ def test_count():
     with pytest.raises(TypeError):
         d.count(1, 2)
 
-    class BadCompare:
+    class BadCompareArithmetic:
         def __eq__(self, other):
             raise ArithmeticError
 
-    d = LinkedList([1, 2, BadCompare(), 3])
+    d = LinkedList([1, 2, BadCompareArithmetic(), 3])
     with pytest.raises(ArithmeticError):
         d.count(2)
 
     d = LinkedList([1, 2, 3])
     with pytest.raises(ArithmeticError):
-        d.count(BadCompare())
+        d.count(BadCompareArithmetic())
 
     class MutatingCompare:
         def __eq__(self, other):
@@ -169,19 +184,6 @@ def test_comparisons():
 
 def test_contains():
     from datastructures import LinkedList
-
-    class BadCmp:
-        def __eq__(self, other):
-            raise RuntimeError
-
-    class MutateCmp:
-        def __init__(self, deque, result):
-            self.deque = deque
-            self.result = result
-
-        def __eq__(self, other):
-            self.deque.clear()
-            return self.result
 
     n = 200
 
@@ -311,3 +313,90 @@ def test_getitem():
         d.__getitem__(0)
     with pytest.raises(IndexError):
         d.__getitem__(-1)
+
+
+def test_index():
+    from datastructures import LinkedList
+
+    for n in 1, 2, 30, 40, 200:
+        d = LinkedList(range(n))
+        for i in range(n):
+            assert d.index(i) == i
+
+        with pytest.raises(ValueError):
+            d.index(n + 1)
+
+        # Test detection of mutation during iteration
+        d = LinkedList(range(n))
+        d[n // 2] = MutateCmp(d, False)
+        with pytest.raises(RuntimeError):
+            d.index(n)
+
+        # Test detection of comparison exceptions
+        d = LinkedList(range(n))
+        d[n // 2] = BadCmp()
+        with pytest.raises(RuntimeError):
+            d.index(n)
+
+    # Test start and stop arguments behavior matches list.index()
+    elements = "ABCDEFGHI"
+    non_element = "Z"
+    d = LinkedList(elements * 2)
+    s = list(elements * 2)
+    for start in range(-5 - len(s) * 2, 5 + len(s) * 2):
+        for stop in range(-5 - len(s) * 2, 5 + len(s) * 2):
+            for element in elements + non_element:
+                try:
+                    target = s.index(element, start, stop)
+                except ValueError:
+                    with pytest.raises(ValueError):
+                        d.index(element, start, stop)
+                else:
+                    assert d.index(element, start, stop) == target
+
+    # Test large start argument
+    d = LinkedList(range(0, 10000, 10))
+    for _ in range(100):
+        i = d.index(8500, 700)
+        assert d[i] == 8500
+        # Repeat test with a different internal offset
+        d.rotate()
+
+
+def test_index_bug_24913():
+    from datastructures import LinkedList
+
+    d = LinkedList("A" * 3)
+    with pytest.raises(ValueError):
+        d.index("Hello world", 0, 4)
+
+
+def test_insert():
+    from datastructures import LinkedList
+
+    # Test to make sure insert behaves like lists
+    elements = "ABCDEFGHI"
+    for i in range(-5 - len(elements) * 2, 5 + len(elements) * 2):
+        d = LinkedList("ABCDEFGHI")
+        s = list("ABCDEFGHI")
+        d.insert(i, "Z")
+        s.insert(i, "Z")
+        assert list(d) == s
+
+
+def test_insert_bug_26194():
+    from datastructures import LinkedList
+
+    data = "ABC"
+    d = LinkedList(data, maxlen=len(data))
+    with pytest.raises(IndexError):
+        d.insert(2, None)
+
+    elements = "ABCDEFGHI"
+    for i in range(-len(elements), len(elements)):
+        d = LinkedList(elements, maxlen=len(elements) + 1)
+        d.insert(i, "Z")
+        if i >= 0:
+            assert d[i] == "Z"
+        else:
+            assert d[i - 1] == "Z"
