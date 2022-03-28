@@ -5,7 +5,7 @@ import pytest
 # Note: These tests are modified from the python standard library unit tests
 #       for `collections.deque`. They were also translated to use pytest instead
 #       of the builtin unittest module.
-#       https://github.com/python/cpython/blob/main/Lib/test/test_LinkedList.py
+#       https://github.com/python/cpython/blob/main/Lib/test/test_deque.py
 
 
 class MutateCmp:
@@ -499,3 +499,125 @@ def test_delitem():
         del d[j]
         assert val not in d
     assert len(d) == 0
+
+
+def test_reverse():
+    import random
+
+    from datastructures import LinkedList
+
+    n = 500  # O(n**2) test, don't make this too big
+    data = [random.random() for _ in range(n)]
+    for i in range(n):
+        d = LinkedList(data[:i])
+        r = d.reverse()
+        assert list(d) == list(reversed(data[:i]))
+        assert r is None
+        d.reverse()
+        assert list(d) == data[:i]
+    with pytest.raises(TypeError):
+        # Arity is zero
+        d.reverse(1)
+
+
+def test_rotate():
+    from datastructures import LinkedList
+
+    s = tuple("abcde")
+    n = len(s)
+
+    d = LinkedList(s)
+    d.rotate(1)  # verify rot(1)
+    assert "".join(d) == "eabcd"
+
+    d = LinkedList(s)
+    d.rotate(-1)  # verify rot(-1)
+    assert "".join(d) == "bcdea"
+    d.rotate()  # check default to 1
+    assert tuple(d) == s
+
+    for i in range(n * 3):
+        d = LinkedList(s)
+        e = LinkedList(d)
+        d.rotate(i)  # check vs. rot(1) n times
+        for _ in range(i):
+            e.rotate(1)
+        assert tuple(d) == tuple(e)
+        d.rotate(-i)  # check that it works in reverse
+        assert tuple(d) == s
+        e.rotate(n - i)  # check that it wraps forward
+        assert tuple(e) == s
+
+    for i in range(n * 3):
+        d = LinkedList(s)
+        e = LinkedList(d)
+        d.rotate(-i)
+        for _ in range(i):
+            e.rotate(-1)  # check vs. rot(-1) n times
+        assert tuple(d) == tuple(e)
+        d.rotate(i)  # check that it works in reverse
+        assert tuple(d) == s
+        e.rotate(i - n)  # check that it wraps backaround
+        assert tuple(e) == s
+
+    d = LinkedList(s)
+    e = LinkedList(s)
+    e.rotate(100_000 + 17)  # verify on long series of rotates
+    dr = d.rotate
+    for _ in range(100_000 + 17):
+        dr()
+    assert tuple(d) == tuple(e)
+
+    with pytest.raises(TypeError):
+        # Wrong arg type
+        d.rotate("x")
+    with pytest.raises(TypeError):
+        d.rotate(1, 10)
+
+    d = LinkedList()
+    d.rotate()  # rotate an empty deque
+    assert d == LinkedList()
+
+
+def test_len():
+    from datastructures import LinkedList
+
+    d = LinkedList("ab")
+    assert len(d) == 2
+    d.popleft()
+    assert len(d) == 1
+    d.pop()
+    assert len(d) == 0
+    with pytest.raises(IndexError):
+        d.pop()
+    assert len(d) == 0
+    d.append("c")
+    assert len(d) == 1
+    d.appendleft("d")
+    assert len(d) == 2
+    d.clear()
+    assert len(d) == 0
+
+
+def test_underflow():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    with pytest.raises(IndexError):
+        d.pop()
+
+    with pytest.raises(IndexError):
+        d.popleft()
+
+
+def test_clear():
+    from datastructures import LinkedList
+
+    d = LinkedList(range(100))
+    assert len(d) == 100
+    d.clear()
+    assert len(d) == 0
+    assert list(d) == []
+    # clear an empty deque
+    d.clear()
+    assert list(d) == []

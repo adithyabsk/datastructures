@@ -117,7 +117,9 @@ class LinkedList:
 
     def clear(self):
         self._check_not_iterating()
-        for node in self._iter():
+        # extract nodes in advance since iteration requires the next node
+        nodes = [n for n in self._iter()]
+        for node in nodes:
             # we are removing all nodes, so we don't need to unlink them
             node.clear(unlink=False)
         self.root = self.tail = None
@@ -138,7 +140,7 @@ class LinkedList:
     def pop(self):
         self._check_not_iterating()
         if len(self) == 0:
-            raise ValueError("linked list is empty")
+            raise IndexError("pop from an empty LinkedList")
         node_val = self.tail.val
         if self.tail.parent is not None:
             self.tail = self.tail.parent
@@ -149,10 +151,9 @@ class LinkedList:
         return node_val
 
     def popleft(self):
-        if self.__is_iterating:
-            raise RuntimeError("linked list mutated during iteration")
+        self._check_not_iterating()
         if len(self) == 0:
-            raise ValueError("linked list is empty")
+            raise IndexError("pop from an empty LinkedList")
         node_val = self.root.val
         if self.root.child is not None:
             self.root = self.root.child
@@ -164,13 +165,17 @@ class LinkedList:
 
     def reverse(self):
         self._check_not_iterating()
-        for node in self:
+        # extract nodes in advance since iteration requires the next node
+        nodes = [n for n in self._iter()]
+        for node in nodes:
             node.child, node.parent = node.parent, node.child
         self.root, self.tail = self.tail, self.root
 
     def rotate(self, n=1):
         self._check_not_iterating()
-        if n > 0:
+        if self._total_items == 0:
+            return
+        elif n > 0:
             for _ in range(n):
                 self.appendleft(self.pop())
         elif n < 0:
