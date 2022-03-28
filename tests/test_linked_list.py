@@ -5,7 +5,7 @@ import pytest
 # Note: These tests are modified from the python standard library unit tests
 #       for `collections.deque`. They were also translated to use pytest instead
 #       of the builtin unittest module.
-#       https://github.com/python/cpython/blob/main/Lib/test/test_deque.py
+#       https://github.com/python/cpython/blob/main/Lib/test/test_LinkedList.py
 
 
 class MutateCmp:
@@ -400,3 +400,102 @@ def test_insert_bug_26194():
             assert d[i] == "Z"
         else:
             assert d[i - 1] == "Z"
+
+
+def test_imul():
+    from datastructures import LinkedList
+
+    for n in (-10, -1, 0, 1, 2, 10, 1000):
+        d = LinkedList()
+        d *= n
+        assert d == LinkedList()
+        assert d.maxlen is None
+
+    for n in (-10, -1, 0, 1, 2, 10, 1000):
+        d = LinkedList("a")
+        d *= n
+        assert d == LinkedList("a" * n)
+        assert d.maxlen is None
+
+    for n in (-10, -1, 0, 1, 2, 10, 499, 500, 501, 1000):
+        d = LinkedList("a", 500)
+        d *= n
+        assert d == LinkedList("a" * min(n, 500))
+        assert d.maxlen == 500
+
+    for n in (-10, -1, 0, 1, 2, 10, 1000):
+        d = LinkedList("abcdef")
+        d *= n
+        assert d == LinkedList("abcdef" * n)
+        assert d.maxlen is None
+
+    for n in (-10, -1, 0, 1, 2, 10, 499, 500, 501, 1000):
+        d = LinkedList("abcdef", 500)
+        d *= n
+        assert d == LinkedList(("abcdef" * n)[-500:])
+        assert d.maxlen == 500
+
+
+def test_mul():
+    from datastructures import LinkedList
+
+    d = LinkedList("abc")
+    assert d * -5 == LinkedList()
+    assert d * 0 == LinkedList()
+    assert d * 1 == LinkedList("abc")
+    assert d * 2 == LinkedList("abcabc")
+    assert d * 3 == LinkedList("abcabcabc")
+    assert d * 1 is not d
+
+    assert LinkedList() * 0 == LinkedList()
+    assert LinkedList() * 1 == LinkedList()
+    assert LinkedList() * 5 == LinkedList()
+
+    assert -5 * d == LinkedList()
+    assert 0 * d == LinkedList()
+    assert 1 * d == LinkedList("abc")
+    assert 2 * d == LinkedList("abcabc")
+    assert 3 * d == LinkedList("abcabcabc")
+
+    d = LinkedList("abc", maxlen=5)
+    assert d * -5 == LinkedList()
+    assert d * 0 == LinkedList()
+    assert d * 1 == LinkedList("abc")
+    assert d * 2 == LinkedList("bcabc")
+    assert d * 30 == LinkedList("bcabc")
+
+
+def test_setitem():
+    from datastructures import LinkedList
+
+    n = 200
+    d = LinkedList(range(n))
+    for i in range(n):
+        d[i] = 10 * i
+    assert list(d) == [10 * i for i in range(n)]
+    _list = list(d)
+    for i in range(1 - n, 0, -1):
+        d[i] = 7 * i
+        _list[i] = 7 * i
+    assert list(d) == _list
+
+
+def test_delitem():
+    import random
+
+    from datastructures import LinkedList
+
+    n = 500  # O(n**2) test, don't make this too big
+    d = LinkedList(range(n))
+    with pytest.raises(IndexError):
+        d.__delitem__(-n - 1)
+    with pytest.raises(IndexError):
+        d.__delitem__(n)
+    for i in range(n):
+        assert len(d) == n - i
+        j = random.randrange(-len(d), len(d))
+        val = d[j]
+        assert val in d
+        del d[j]
+        assert val not in d
+    assert len(d) == 0

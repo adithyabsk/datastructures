@@ -33,17 +33,18 @@ class LinkedList:
             node.child = self
             self.parent = node
 
-        def clear(self):
+        def clear(self, unlink=False):
+            if unlink:
+                if self.parent is not None:
+                    self.parent.child = self.child
+                if self.child is not None:
+                    self.child.parent = self.parent
             self.val = None
             self.parent = None
             self.child = None
 
         def __del__(self):
-            if self.parent is not None:
-                self.parent.child = self.child
-            if self.child is not None:
-                self.child.parent = self.parent
-            self.clear()
+            self.clear(True)
 
         def __eq__(self, other):  # pragma: no cover
             return self.val == other.val
@@ -117,7 +118,8 @@ class LinkedList:
     def clear(self):
         self._check_not_iterating()
         for node in self._iter():
-            node.clear()
+            # we are removing all nodes, so we don't need to unlink them
+            node.clear(unlink=False)
         self.root = self.tail = None
         self._total_items = 0
 
@@ -194,7 +196,6 @@ class LinkedList:
                 if idx >= stop:
                     break
                 if val == x:
-                    self.__is_iterating = False
                     return idx
         raise ValueError(f"{x} is not in the LinkedList")
 
@@ -233,15 +234,10 @@ class LinkedList:
         if iterate_forward:
             for i, node in enumerate(self._iter()):
                 if i == index:
-                    # Since we exit out of the generator early, (before
-                    # StopIteration has been raised, we don't actually set the
-                    # `__is_iterating` to false, so have to manually do it here
-                    self.__is_iterating = False
                     return node
         else:
             for i, node in enumerate(self._iter(reverse=True)):
                 if (self._total_items - 1 - i) == index:
-                    self.__is_iterating = False
                     return node
 
     def __getitem__(self, index):
@@ -253,19 +249,38 @@ class LinkedList:
         node = self._getnode(index)
         node.val = value
 
-    def _iter(self, reverse=False):
-        self.__is_iterating = True
-        if not reverse:
-            node = self.root
-            while node is not None:
-                yield node
-                node = node.child
+    def __delitem__(self, index):
+        # we use popleft and pop instead of the below code so we don't have to
+        # manage head and tail
+        if index == 0 or index == -self._total_items:
+            self.popleft()
+        elif index == self._total_items - 1 or index == -1:
+            self.pop()
         else:
-            node = self.tail
-            while node is not None:
-                yield node
-                node = node.parent
-        self.__is_iterating = False
+            node = self._getnode(index)
+            # since we are removing only one node, we need to unlink it
+            node.clear(unlink=True)
+            self._total_items -= 1
+
+    def _iter(self, reverse=False):
+        # we need to use try/finally so that `__is_iterating` is set to False on
+        # garbage collection of the generator. Otherwise, if we have an early
+        # exit from the generator (e.g. a return), `__is_iterating` is not set
+        # to False.
+        try:
+            self.__is_iterating = True
+            if not reverse:
+                node = self.root
+                while node is not None:
+                    yield node
+                    node = node.child
+            else:
+                node = self.tail
+                while node is not None:
+                    yield node
+                    node = node.parent
+        finally:
+            self.__is_iterating = False
 
     def __iter__(self):
         for n in self._iter():
@@ -307,6 +322,39 @@ class LinkedList:
     def __iadd__(self, other):
         self.extend(other)
         return self
+
+    def __mul__(self, other):
+        if isinstance(other, int):
+            ret = LinkedList(maxlen=self.maxlen)
+            if other <= 0:
+                return ret
+            else:
+                tmp_self = list(self)
+                for _ in range(other):
+                    ret.extend(tmp_self)
+            return ret
+        else:
+            raise TypeError(
+                f"can't multiply sequence by non-int of type '{type(other)}'"
+            )
+
+    def __rmul__(self, first):
+        return self * first
+
+    def __imul__(self, other):
+        if isinstance(other, int):
+            if other <= 0:
+                self.clear()
+                return self
+            else:
+                tmp_self = list(self)
+                for _ in range(other - 1):
+                    self.extend(tmp_self)
+                return self
+        else:
+            raise TypeError(
+                f"can't multiply sequence by non-int of type '{type(other)}'"
+            )
 
     def __str__(self):
         # CPython has some magic code to traverse the stack to check if an
