@@ -7,6 +7,8 @@ import pytest
 #       of the builtin unittest module.
 #       https://github.com/python/cpython/blob/main/Lib/test/test_deque.py
 
+BIG = 100_00
+
 
 class MutateCmp:
     def __init__(self, deque, result):
@@ -562,9 +564,9 @@ def test_rotate():
 
     d = LinkedList(s)
     e = LinkedList(s)
-    e.rotate(100_000 + 17)  # verify on long series of rotates
+    e.rotate(BIG + 17)  # verify on long series of rotates
     dr = d.rotate
-    for _ in range(100_000 + 17):
+    for _ in range(BIG + 17):
         dr()
     assert tuple(d) == tuple(e)
 
@@ -621,3 +623,227 @@ def test_clear():
     # clear an empty deque
     d.clear()
     assert list(d) == []
+
+
+def test_remove():
+    from datastructures import LinkedList
+
+    d = LinkedList("abcdefghcij")
+    d.remove("c")
+    assert d == LinkedList("abdefghcij")
+    d.remove("c")
+    assert d == LinkedList("abdefghij")
+    with pytest.raises(ValueError):
+        d.remove("c")
+    assert d == LinkedList("abdefghij")
+
+    # Handle comparison errors
+    d = LinkedList(["a", "b", BadCmp(), "c"])
+    e = LinkedList(d)
+    with pytest.raises(RuntimeError):
+        d.remove("c")
+    for x, y in zip(d, e):
+        # verify that original order and values are retained.
+        assert x is y
+
+    # Handle evil mutator
+    for match in (True, False):
+        d = LinkedList(["ab"])
+        d.extend([MutateCmp(d, match), "c"])
+        # changed to RuntimeError for consistency (original test checked for an
+        # IndexError)
+        with pytest.raises(RuntimeError):
+            d.remove("c")
+        assert d == LinkedList()
+
+
+def test_repr():
+    from datastructures import LinkedList
+
+    d = LinkedList(range(200))
+    e = eval(repr(d))
+    assert list(d) == list(e)
+    d.append(d)
+    assert repr(d)[-40:] == " 196, 197, 198, 199, LinkedList([...])])"
+
+
+def test_init():
+    from datastructures import LinkedList
+
+    with pytest.raises(TypeError):
+        LinkedList("abc", 2, 3)
+    with pytest.raises(TypeError):
+        LinkedList(1)
+
+
+def test_hash():
+    from datastructures import LinkedList
+
+    with pytest.raises(TypeError):
+        hash(LinkedList("abc"))
+
+
+def test_long_steadystate_queue_popleft():
+    from datastructures import LinkedList
+
+    for size in (0, 1, 2, 100, 1000):
+        d = LinkedList(range(size))
+        append, pop = d.append, d.popleft
+        for i in range(size, BIG):
+            append(i)
+            x = pop()
+            if x != i - size:
+                assert x == i - size
+        assert list(d) == list(range(BIG - size, BIG))
+
+
+def test_long_steadystate_queue_popright():
+    from datastructures import LinkedList
+
+    for size in (0, 1, 2, 100, 1000):
+        d = LinkedList(reversed(range(size)))
+        append, pop = d.appendleft, d.pop
+        for i in range(size, BIG):
+            append(i)
+            x = pop()
+            if x != i - size:
+                assert x == i - size
+        assert list(reversed(list(d))) == list(range(BIG - size, BIG))
+
+
+def test_big_queue_popleft():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    append, pop = d.append, d.popleft
+    for i in range(BIG):
+        append(i)
+    for i in range(BIG):
+        x = pop()
+        if x != i:
+            assert x == i
+
+
+def test_big_queue_popright():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    append, pop = d.appendleft, d.pop
+    for i in range(BIG):
+        append(i)
+    for i in range(BIG):
+        x = pop()
+        if x != i:
+            assert x == i
+
+
+def test_big_stack_right():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    append, pop = d.append, d.pop
+    for i in range(BIG):
+        append(i)
+    for i in reversed(range(BIG)):
+        x = pop()
+        if x != i:
+            assert x == i
+    assert len(d) == 0
+
+
+def test_big_stack_left():
+    from datastructures import LinkedList
+
+    d = LinkedList()
+    append, pop = d.appendleft, d.popleft
+    for i in range(BIG):
+        append(i)
+    for i in reversed(range(BIG)):
+        x = pop()
+        if x != i:
+            assert x == i
+    assert len(d) == 0
+
+
+def test_roundtrip_iter_init():
+    from datastructures import LinkedList
+
+    d = LinkedList(range(200))
+    e = LinkedList(d)
+    assert id(d) != id(e)
+    assert list(d) == list(e)
+
+
+def test_pickle():
+    import pickle
+
+    from datastructures import LinkedList
+
+    for d in LinkedList(range(200)), LinkedList(range(200), 100):
+        for i in range(pickle.HIGHEST_PROTOCOL + 1):
+            s = pickle.dumps(d, i)
+            e = pickle.loads(s)
+            assert id(e) != id(d)
+            assert list(e) == list(d)
+            assert e.maxlen == d.maxlen
+
+
+def test_pickle_recursive():
+    import pickle
+
+    from datastructures import LinkedList
+
+    for d in LinkedList("abc"), LinkedList("abc", 3):
+        d.append(d)
+        for i in range(pickle.HIGHEST_PROTOCOL + 1):
+            e = pickle.loads(pickle.dumps(d, i))
+            assert id(e) != id(d)
+            assert id(e[-1]) == id(e)
+            assert e.maxlen == d.maxlen
+
+
+def test_iterator_pickle():
+    import pickle
+
+    from datastructures import LinkedList
+
+    orig = LinkedList(range(200))
+    data = [i * 1.01 for i in orig]
+    for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+        # initial iterator
+        itorg = iter(orig)
+        dump = pickle.dumps((itorg, orig), proto)
+        it, d = pickle.loads(dump)
+        for i, x in enumerate(data):
+            d[i] = x
+        assert type(it) == type(itorg)
+        assert list(it) == data
+
+        # running iterator
+        next(itorg)
+        dump = pickle.dumps((itorg, orig), proto)
+        it, d = pickle.loads(dump)
+        for i, x in enumerate(data):
+            d[i] = x
+        assert type(it) == type(itorg)
+        assert list(it) == data[1:]
+
+        # empty iterator
+        for _ in range(1, len(data)):
+            next(itorg)
+        dump = pickle.dumps((itorg, orig), proto)
+        it, d = pickle.loads(dump)
+        for i, x in enumerate(data):
+            d[i] = x
+        assert type(it) == type(itorg)
+        assert list(it) == []
+
+        # exhausted iterator
+        with pytest.raises(StopIteration):
+            next(itorg)
+        dump = pickle.dumps((itorg, orig), proto)
+        it, d = pickle.loads(dump)
+        for i, x in enumerate(data):
+            d[i] = x
+        assert type(it) == type(itorg)
+        assert list(it) == []

@@ -1,5 +1,4 @@
 """A doubly linked list."""
-
 from functools import total_ordering
 
 # when you're bored and have some time, finish these TODOs
@@ -19,17 +18,17 @@ from functools import total_ordering
 class LinkedList:
     """A pure python implementation of collections.deque"""
 
-    class Node:
+    class _Node:
         def __init__(self, val):
             self.val = val
             self.parent = None
             self.child = None
 
-        def append(self, node: "LinkedList.Node"):
+        def append(self, node: "LinkedList._Node"):
             node.parent = self
             self.child = node
 
-        def appendleft(self, node: "LinkedList.Node"):
+        def appendleft(self, node: "LinkedList._Node"):
             node.child = self
             self.parent = node
 
@@ -50,10 +49,34 @@ class LinkedList:
             return self.val == other.val
 
         def __repr__(self):  # pragma: no cover
-            return f"LinkedList.Node({self})"
+            return f"LinkedList._Node({self})"
 
         def __str__(self):  # pragma: no cover
             return str(self.val)
+
+    # We need this separate iterator class so that we can pickle the iterator
+    class _Iterator:
+        def __init__(self, start, node=False, reverse=False) -> None:
+            self.current = start
+            self.reverse = reverse
+            self.node = node
+
+        def __iter__(self):
+            return self
+
+        def _update(self):
+            if self.reverse:
+                self.current = self.current.parent
+            else:
+                self.current = self.current.child
+
+        def __next__(self):
+            if self.current is None:
+                raise StopIteration
+            else:
+                node = self.current
+                self._update()
+                return node if self.node else node.val
 
     def __init__(self, iterable=None, maxlen=None):
         if maxlen is not None and maxlen < 0:
@@ -66,6 +89,7 @@ class LinkedList:
         self._total_items = 0
         self._maxlen = maxlen
         self.__is_iterating = False
+        self.__state = 0  # moves whenever indices are changed
         if iterable is not None:
             self.extend(iterable)
 
@@ -73,57 +97,61 @@ class LinkedList:
     def maxlen(self):
         return self._maxlen
 
-    def _check_not_iterating(self):
-        if self.__is_iterating:
+    def _check_not_mutated(self, start_state):
+        if self.__state != start_state:
             raise RuntimeError("linked list mutated during iteration")
 
     def append(self, val):
-        self._check_not_iterating()
         if self.maxlen is not None and self._total_items >= self.maxlen:
             if self.maxlen == 0:
                 return
             else:
                 self.popleft()
         if self.tail is None:
-            self.root = self.tail = self.Node(val)
+            self.root = self.tail = self._Node(val)
         else:
-            node = self.Node(val)
+            node = self._Node(val)
             self.tail.append(node)
             self.tail = node
         self._total_items += 1
+        self.__state += 1
 
     def appendleft(self, val):
-        self._check_not_iterating()
         if self.maxlen is not None and self._total_items >= self.maxlen:
             if self.maxlen == 0:
                 return
             else:
                 self.pop()
         if self.root is None:
-            self.root = self.tail = self.Node(val)
+            self.root = self.tail = self._Node(val)
         else:
-            node = self.Node(val)
+            node = self._Node(val)
             self.root.appendleft(node)
             self.root = node
         self._total_items += 1
+        self.__state += 1
 
     def count(self, x):
         total = 0
+        start_state = self.__state
         for item in self:
             if item == x:
                 total += 1
+            self._check_not_mutated(start_state)
 
         return total
 
     def clear(self):
-        self._check_not_iterating()
         # extract nodes in advance since iteration requires the next node
-        nodes = [n for n in self._iter()]
+        nodes = [n for n in self._Iterator(self.root, node=True)]
+
         for node in nodes:
             # we are removing all nodes, so we don't need to unlink them
             node.clear(unlink=False)
+
         self.root = self.tail = None
         self._total_items = 0
+        self.__state += 1
 
     def extend(self, iterable):
         # iterate over the data in advance in case iterable is self
@@ -138,7 +166,6 @@ class LinkedList:
             self.appendleft(i)
 
     def pop(self):
-        self._check_not_iterating()
         if len(self) == 0:
             raise IndexError("pop from an empty LinkedList")
         node_val = self.tail.val
@@ -148,10 +175,10 @@ class LinkedList:
         else:
             self.tail = self.root = None
         self._total_items -= 1
+        self.__state += 1
         return node_val
 
     def popleft(self):
-        self._check_not_iterating()
         if len(self) == 0:
             raise IndexError("pop from an empty LinkedList")
         node_val = self.root.val
@@ -161,18 +188,29 @@ class LinkedList:
         else:
             self.root = self.tail = None
         self._total_items -= 1
+        self.__state += 1
         return node_val
 
     def reverse(self):
-        self._check_not_iterating()
         # extract nodes in advance since iteration requires the next node
-        nodes = [n for n in self._iter()]
+        nodes = [n for n in self._Iterator(self.root, node=True)]
         for node in nodes:
             node.child, node.parent = node.parent, node.child
         self.root, self.tail = self.tail, self.root
 
+    def remove(self, value):
+        start_state = self.__state
+        for i, v in enumerate(self):
+            if v == value:
+                self._check_not_mutated(start_state)
+                del self[i]
+                break
+            else:
+                self._check_not_mutated(start_state)
+        else:
+            raise ValueError(f"{value} not in deque")
+
     def rotate(self, n=1):
-        self._check_not_iterating()
         if self._total_items == 0:
             return
         elif n > 0:
@@ -195,13 +233,20 @@ class LinkedList:
         if not (start >= self._total_items or stop < -self._total_items):
             start = self._rectify_negative_index(start)
             stop = self._rectify_negative_index(stop)
+            start_state = self.__state
             for idx, val in enumerate(self):
+                # we need to do the checks in each of the if statements in case
+                # the mutation happens in an overloaded comparison function
                 if idx < start:
+                    self._check_not_mutated(start_state)
                     continue
-                if idx >= stop:
+                elif idx >= stop:
+                    self._check_not_mutated(start_state)
                     break
-                if val == x:
+                elif val == x:
+                    self._check_not_mutated(start_state)
                     return idx
+                self._check_not_mutated(start_state)
         raise ValueError(f"{x} is not in the LinkedList")
 
     def insert(self, i, x):
@@ -220,10 +265,11 @@ class LinkedList:
             parent_node = self._getnode(i - 1)
             # current node at i will become i+1
             child_node = self._getnode(i)
-            new_node = self.Node(x)
+            new_node = self._Node(x)
             parent_node.append(new_node)
             new_node.append(child_node)
             self._total_items += 1
+            self.__state += 1
 
     def __len__(self):
         return self._total_items
@@ -237,11 +283,17 @@ class LinkedList:
         # over the entire array
         iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
-            for i, node in enumerate(self._iter()):
+            start_state = self.__state
+            for i, node in enumerate(self._Iterator(self.root, node=True)):
+                self._check_not_mutated(start_state)
                 if i == index:
                     return node
         else:
-            for i, node in enumerate(self._iter(reverse=True)):
+            start_state = self.__state
+            for i, node in enumerate(
+                self._Iterator(self.tail, node=True, reverse=True)
+            ):
+                self._check_not_mutated(start_state)
                 if (self._total_items - 1 - i) == index:
                     return node
 
@@ -266,37 +318,25 @@ class LinkedList:
             # since we are removing only one node, we need to unlink it
             node.clear(unlink=True)
             self._total_items -= 1
+            self.__state += 1
 
-    def _iter(self, reverse=False):
-        # we need to use try/finally so that `__is_iterating` is set to False on
-        # garbage collection of the generator. Otherwise, if we have an early
-        # exit from the generator (e.g. a return), `__is_iterating` is not set
-        # to False.
-        try:
-            self.__is_iterating = True
-            if not reverse:
-                node = self.root
-                while node is not None:
-                    yield node
-                    node = node.child
-            else:
-                node = self.tail
-                while node is not None:
-                    yield node
-                    node = node.parent
-        finally:
-            self.__is_iterating = False
+    def __contains__(self, item):
+        start_state = self.__state
+        for val in self:
+            if val == item:
+                return True
+            self._check_not_mutated(start_state)
+        else:
+            return False
 
     def __iter__(self):
-        for n in self._iter():
-            yield n.val
+        return self._Iterator(self.root)
 
     def __reversed__(self):
         # we could just use the default implementation of reversed that uses
         # __len__ and __getitem__, but this is likely more optimal
         # TODO: validate the above assumption
-        for node in self.iter(reverse=True):
-            yield node.val
+        return self._Iterator(self.tail, reverse=True)
 
     def __eq__(self, other):
         if isinstance(other, LinkedList):
@@ -335,6 +375,7 @@ class LinkedList:
                 return ret
             else:
                 tmp_self = list(self)
+
                 for _ in range(other):
                     ret.extend(tmp_self)
             return ret
