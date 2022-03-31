@@ -1,4 +1,4 @@
 from .fixed_hash_map import FixedHashMap
-from .linked_list import LinkedList
+from .deque import Deque
 
-__all__ = ["FixedHashMap", "LinkedList"]
+__all__ = ["FixedHashMap", "Deque"]

@@ -1,4 +1,4 @@
-"""A doubly linked list."""
+"""A doubly linked list implementation of a deque."""
 from functools import total_ordering
 
 # TODO: add support for arbitrary index popping and appending to DRY the
@@ -10,7 +10,7 @@ from functools import total_ordering
 
 
 @total_ordering
-class LinkedList:
+class Deque:
     """A pure python implementation of collections.deque"""
 
     class _Node:
@@ -19,11 +19,11 @@ class LinkedList:
             self.parent = None
             self.child = None
 
-        def append(self, node: "LinkedList._Node"):
+        def append(self, node: "Deque._Node"):
             node.parent = self
             self.child = node
 
-        def appendleft(self, node: "LinkedList._Node"):
+        def appendleft(self, node: "Deque._Node"):
             node.child = self
             self.parent = node
 
@@ -44,7 +44,7 @@ class LinkedList:
             return self.val == other.val
 
         def __repr__(self):  # pragma: no cover
-            return f"LinkedList._Node({self})"
+            return f"Deque._Node({self})"
 
         def __str__(self):  # pragma: no cover
             return str(self.val)
@@ -137,7 +137,7 @@ class LinkedList:
         return total
 
     def copy(self):
-        return LinkedList(self, maxlen=self.maxlen)
+        return Deque(self, maxlen=self.maxlen)
 
     def clear(self):
         # extract nodes in advance since iteration requires the next node
@@ -165,7 +165,7 @@ class LinkedList:
 
     def pop(self):
         if len(self) == 0:
-            raise IndexError("pop from an empty LinkedList")
+            raise IndexError("pop from an empty Deque")
         node_val = self.tail.val
         if self.tail.parent is not None:
             self.tail = self.tail.parent
@@ -178,7 +178,7 @@ class LinkedList:
 
     def popleft(self):
         if len(self) == 0:
-            raise IndexError("pop from an empty LinkedList")
+            raise IndexError("pop from an empty Deque")
         node_val = self.head.val
         if self.head.child is not None:
             self.head = self.head.child
@@ -245,11 +245,11 @@ class LinkedList:
                     self._check_not_mutated(start_state)
                     return idx
                 self._check_not_mutated(start_state)
-        raise ValueError(f"{x} is not in the LinkedList")
+        raise ValueError(f"{x} is not in the Deque")
 
     def insert(self, i, x):
         if self.maxlen is not None and self._total_items >= self.maxlen:
-            raise IndexError("LinkedList already at its maximum size")
+            raise IndexError("Deque already at its maximum size")
         if i < -self._total_items:
             i = 0
         if i >= self._total_items:
@@ -337,13 +337,13 @@ class LinkedList:
         return self._Iterator(self.tail, reverse=True)
 
     def __eq__(self, other):
-        if isinstance(other, LinkedList):
+        if isinstance(other, Deque):
             return len(self) == len(other) and all(s == o for s, o in zip(self, other))
         else:
             return False
 
     def __lt__(self, other):
-        if isinstance(other, LinkedList):
+        if isinstance(other, Deque):
             return len(self) < len(other) or (
                 len(self) == len(other) and all(s < o for s, o in zip(self, other))
             )
@@ -353,8 +353,8 @@ class LinkedList:
             )
 
     def __add__(self, other):
-        if isinstance(other, LinkedList):
-            ret = LinkedList(self, maxlen=self.maxlen)
+        if isinstance(other, Deque):
+            ret = Deque(self, maxlen=self.maxlen)
             ret.extend(other)
             return ret
         else:
@@ -368,7 +368,7 @@ class LinkedList:
 
     def __mul__(self, other):
         if isinstance(other, int):
-            ret = LinkedList(maxlen=self.maxlen)
+            ret = Deque(maxlen=self.maxlen)
             if other <= 0:
                 return ret
             else:
@@ -404,17 +404,17 @@ class LinkedList:
         # CPython has some magic code to traverse the stack to check if an
         # object is self referential. We could replicate that functionality with
         # inspect, but that would make this function waaaay to complicated.
-        # Instead, we just truncate any LinkedList that refers to another
-        # LinkedList.
+        # Instead, we just truncate any Deque that refers to another
+        # Deque.
         # https://stackoverflow.com/a/15849554/3262054
         inner = ", ".join(
-            str(n) if not isinstance(n, LinkedList) else "LinkedList([...])"
+            str(n) if not isinstance(n, Deque) else "Deque([...])"
             for n in self
         )
         return f"[{inner}]"
 
     def __repr__(self):
-        ret = f"LinkedList({self}"
+        ret = f"Deque({self}"
         if self.maxlen is not None:
             ret += f", maxlen={self.maxlen}"
         ret += ")"
