@@ -141,6 +141,9 @@ class LinkedList:
 
         return total
 
+    def copy(self):
+        return LinkedList(self, maxlen=self.maxlen)
+
     def clear(self):
         # extract nodes in advance since iteration requires the next node
         nodes = [n for n in self._Iterator(self.root, node=True)]

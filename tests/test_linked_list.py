@@ -847,3 +847,106 @@ def test_iterator_pickle():
             d[i] = x
         assert type(it) == type(itorg)
         assert list(it) == []
+
+
+def test_deepcopy():
+    import copy
+
+    from datastructures import LinkedList
+
+    mut = [10]
+    d = LinkedList([mut])
+    e = copy.deepcopy(d)
+    assert list(d) == list(e)
+    mut[0] = 11
+    assert id(d) != id(e)
+    assert list(d) != list(e)
+
+
+def test_copy():
+    import copy
+    import random
+
+    from datastructures import LinkedList
+
+    mut = [10]
+    d = LinkedList([mut])
+    e = copy.copy(d)
+    assert list(d) == list(e)
+    mut[0] = 11
+    assert id(d) != id(e)
+    assert list(d) == list(e)
+
+    for i in range(5):
+        for maxlen in range(-1, 6):
+            s = [random.random() for j in range(i)]
+            d = LinkedList(s) if maxlen == -1 else LinkedList(s, maxlen)
+            e = d.copy()
+
+            assert d == e
+            assert d.maxlen == e.maxlen
+            assert all(x is y for x, y in zip(d, e))
+
+
+def test_copy_method():
+    from datastructures import LinkedList
+
+    mut = [10]
+    d = LinkedList([mut])
+    e = d.copy()
+    assert list(d) == list(e)
+    mut[0] = 11
+    assert id(d) != id(e)
+    assert list(d) == list(e)
+
+
+def test_reversed():
+    from datastructures import LinkedList
+
+    for s in ("abcd", range(2000)):
+        assert list(reversed(LinkedList(s))) == list(reversed(s))
+
+
+# I chose to skip this test since it tests internal implementation details
+# rather than functionality. This test checks if you can create a new linked
+# list iterator using the internal iterator class and passing it an existing
+# linked list. That was not how I chose to implement my iterator since it
+# handles both forward and revese iterations.
+def test_reversed_new():
+    pass
+
+
+def test_gc_doesnt_blowup():
+    import gc
+
+    from datastructures import LinkedList
+
+    # This used to assert-fail in deque_traverse() under a debug
+    # build, or run wild with a NULL pointer in a release build.
+    d = LinkedList()
+    for _ in range(100):
+        d.append(1)
+        gc.collect()
+
+
+def test_container_iterator():
+    import gc
+    import weakref
+
+    from datastructures import LinkedList
+
+    # Bug #3680: tp_traverse was not implemented for deque iterator objects
+    class C:
+        pass
+
+    for i in range(2):
+        obj = C()
+        ref = weakref.ref(obj)
+        if i == 0:
+            container = LinkedList([obj, 1])
+        else:
+            container = reversed(LinkedList([obj, 1]))
+        obj.x = iter(container)
+        del obj, container
+        gc.collect()
+        assert ref() is None
