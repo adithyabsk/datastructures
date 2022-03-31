@@ -1,13 +1,8 @@
 """A doubly linked list."""
 from functools import total_ordering
 
-# when you're bored and have some time, finish these TODOs
-# TODO: add support for arbitrary index popping to DRY the implemenation of
-#       pop and popleft
-# TODO: add support for copy and deepcopy
-# TODO: add support for __add__
-# TODO: add support for __mul__
-# TODO: add support for __imul__
+# TODO: add support for arbitrary index popping and appending to DRY the
+#       implementation of pop, popleft, append, and appendleft
 
 # Note: total ordering generates all the rich comparison operators given
 #       `__eq__` and `__lt__`.
@@ -81,10 +76,10 @@ class LinkedList:
     def __init__(self, iterable=None, maxlen=None):
         if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be > 0")
-        if hasattr(self, "root"):
+        if hasattr(self, "head"):
             # init is being called directly for the second time
             self.clear()
-        self.root = None
+        self.head = None
         self.tail = None
         self._total_items = 0
         self._maxlen = maxlen
@@ -108,7 +103,7 @@ class LinkedList:
             else:
                 self.popleft()
         if self.tail is None:
-            self.root = self.tail = self._Node(val)
+            self.head = self.tail = self._Node(val)
         else:
             node = self._Node(val)
             self.tail.append(node)
@@ -122,12 +117,12 @@ class LinkedList:
                 return
             else:
                 self.pop()
-        if self.root is None:
-            self.root = self.tail = self._Node(val)
+        if self.head is None:
+            self.head = self.tail = self._Node(val)
         else:
             node = self._Node(val)
-            self.root.appendleft(node)
-            self.root = node
+            self.head.appendleft(node)
+            self.head = node
         self._total_items += 1
         self.__state += 1
 
@@ -146,13 +141,13 @@ class LinkedList:
 
     def clear(self):
         # extract nodes in advance since iteration requires the next node
-        nodes = [n for n in self._Iterator(self.root, node=True)]
+        nodes = [n for n in self._Iterator(self.head, node=True)]
 
         for node in nodes:
             # we are removing all nodes, so we don't need to unlink them
             node.clear(unlink=False)
 
-        self.root = self.tail = None
+        self.head = self.tail = None
         self._total_items = 0
         self.__state += 1
 
@@ -176,7 +171,7 @@ class LinkedList:
             self.tail = self.tail.parent
             self.tail.child = None
         else:
-            self.tail = self.root = None
+            self.tail = self.head = None
         self._total_items -= 1
         self.__state += 1
         return node_val
@@ -184,22 +179,22 @@ class LinkedList:
     def popleft(self):
         if len(self) == 0:
             raise IndexError("pop from an empty LinkedList")
-        node_val = self.root.val
-        if self.root.child is not None:
-            self.root = self.root.child
-            self.root.parent = None
+        node_val = self.head.val
+        if self.head.child is not None:
+            self.head = self.head.child
+            self.head.parent = None
         else:
-            self.root = self.tail = None
+            self.head = self.tail = None
         self._total_items -= 1
         self.__state += 1
         return node_val
 
     def reverse(self):
         # extract nodes in advance since iteration requires the next node
-        nodes = [n for n in self._Iterator(self.root, node=True)]
+        nodes = [n for n in self._Iterator(self.head, node=True)]
         for node in nodes:
             node.child, node.parent = node.parent, node.child
-        self.root, self.tail = self.tail, self.root
+        self.head, self.tail = self.tail, self.head
 
     def remove(self, value):
         start_state = self.__state
@@ -287,7 +282,7 @@ class LinkedList:
         iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
             start_state = self.__state
-            for i, node in enumerate(self._Iterator(self.root, node=True)):
+            for i, node in enumerate(self._Iterator(self.head, node=True)):
                 self._check_not_mutated(start_state)
                 if i == index:
                     return node
@@ -333,7 +328,7 @@ class LinkedList:
             return False
 
     def __iter__(self):
-        return self._Iterator(self.root)
+        return self._Iterator(self.head)
 
     def __reversed__(self):
         # we could just use the default implementation of reversed that uses
