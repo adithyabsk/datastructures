@@ -408,8 +408,7 @@ class Deque:
         # Deque.
         # https://stackoverflow.com/a/15849554/3262054
         inner = ", ".join(
-            str(n) if not isinstance(n, Deque) else "Deque([...])"
-            for n in self
+            str(n) if not isinstance(n, Deque) else "Deque([...])" for n in self
         )
         return f"[{inner}]"
 

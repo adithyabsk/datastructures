@@ -80,7 +80,7 @@ def test_maxlen():
     # otherwise we end up in a recursive loop
     d = Deque(range(200), maxlen=10)
     d.append(d)
-    assert repr(d)[-50:] == "196, 197, 198, 199, Deque([...])], maxlen=10)"
+    assert repr(d)[-50:] == "195, 196, 197, 198, 199, Deque([...])], maxlen=10)"
     d = Deque(range(10), maxlen=None)
     assert repr(d) == "Deque([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])"
 
@@ -664,7 +664,7 @@ def test_repr():
     e = eval(repr(d))
     assert list(d) == list(e)
     d.append(d)
-    assert repr(d)[-40:] == " 196, 197, 198, 199, Deque([...])])"
+    assert repr(d)[-40:] == " 195, 196, 197, 198, 199, Deque([...])])"
 
 
 def test_init():
