@@ -3,6 +3,7 @@ from functools import total_ordering
 
 # TODO: add support for arbitrary index popping and appending to DRY the
 #       implementation of pop, popleft, append, and appendleft
+# TODO: create a context manager class that can be used with `__state`
 
 # Note: total ordering generates all the rich comparison operators given
 #       `__eq__` and `__lt__`.
@@ -27,15 +28,22 @@ class Deque:
             node.child = self
             self.parent = node
 
+        def set_none(self, var_name):
+            if hasattr(self, var_name):
+                setattr(self, var_name, None)
+
         def clear(self, unlink=False):
+            # the reason we use hasattr is because this method has to work
+            # even if the initializer fails to fully run (since it is used in
+            # `__del__`
             if unlink:
-                if self.parent is not None:
+                if hasattr(self, "parent") and self.parent is not None:
                     self.parent.child = self.child
-                if self.child is not None:
+                if hasattr(self, "parent") and self.child is not None:
                     self.child.parent = self.parent
-            self.val = None
-            self.parent = None
-            self.child = None
+            self.set_none("val")
+            self.set_none("parent")
+            self.set_none("child")
 
         def __del__(self):
             self.clear(True)
