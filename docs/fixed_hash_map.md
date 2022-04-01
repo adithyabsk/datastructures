@@ -30,14 +30,14 @@ used in dynamically sized hash tables to know when we should resize the table.
 There are two main implementation options for hash tables which each resolve
 collisions slightly differently:
 
-- Open addressing
-- Separate Chaining
+- [Open addressing](https://en.wikipedia.org/wiki/Open_addressing)
+- [Separate Chaining](https://en.wikipedia.org/wiki/Hash_table#Separate_chaining)
 
 This particular implementation uses:
 
 - Open addressing
-- Linear probing
-- Tombstone deletion
+- [Linear probing](https://en.wikipedia.org/wiki/Linear_probing)
+- [Tombstone deletion](https://en.wikipedia.org/wiki/Tombstone_(data_store))
 
 ### Separate Chaining
 
@@ -85,7 +85,7 @@ find an empty bucket array.
 There are a couple of strategies for deletion:
 
 - tombstone deletion
-- backward shift deletion
+- [backward shift deletion](https://codecapsule.com/2013/11/17/robin-hood-hashing-backward-shift-deletion/)
 
 With tombstone deletion, we just mark a slot as deleted and allow it to be
 replaced. This means that we skip past it when applying a probing strategy. A
@@ -94,8 +94,3 @@ slowed down.
 
 With backward shift deletion, we move items that were added as a result of a
 collision one slot backward.
-
-## Sources
-
-- [https://en.wikipedia.org/wiki/Hash_table](https://en.wikipedia.org/wiki/Hash_table)
-- [https://en.wikipedia.org/wiki/Linear_probing](https://en.wikipedia.org/wiki/Linear_probing)

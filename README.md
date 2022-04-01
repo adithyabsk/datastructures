@@ -3,7 +3,9 @@
 [![build](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml)
 [![coverage](./coverage.svg)](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml)
 
-- [Fixed Hash Map](./datastructures/fixed_hash_map.py):
+* [Deque](./datastructures/deque.py):
+[Docs](./docs/deque.md)
+* [Fixed Hash Map](./datastructures/fixed_hash_map.py):
 [Docs](./docs/fixed_hash_map.md)
 
 ## Installation Instructions
@@ -14,8 +16,8 @@ pip install .
 
 ## Developers
 
-- Install [`pre-commit`](https://pre-commit.com/)
-- Install [`poetry`](https://python-poetry.org/)
+* Install [`pre-commit`](https://pre-commit.com/)
+* Install [`poetry`](https://python-poetry.org/)
 
 Then, inside the repo run:
 
