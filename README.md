@@ -37,3 +37,9 @@ View coverage
 ```shell
 open htmlcov/index.html
 ```
+
+Export requirements
+
+```shell
+poetry export -f requirements.txt --output requirements.txt --dev
+```
