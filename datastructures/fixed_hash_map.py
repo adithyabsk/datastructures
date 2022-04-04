@@ -1,6 +1,7 @@
 """A hash map implementation with a fixed size."""
 
-# TODO: Update this implementation so that you can insert None as a key
+# TODO: Update this implementation so that you can insert None as a key. This is
+#       done through the use of sentinel objects.
 
 
 class FixedHashMap:
