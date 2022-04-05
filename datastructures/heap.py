@@ -17,8 +17,10 @@ def heapsort(iterable):
 
 
 class MaxHeap:
-    def __init__(self):
+    def __init__(self, keys=None, iterable=None):
         self.tree = BinaryTree()
+        if keys is not None and iterable is not None:
+            self._build_max_heap(keys, iterable)
 
     def heapify(self, index):
         """Correct the placement of node at index.
@@ -28,8 +30,8 @@ class MaxHeap:
         greater than or equal to their children.
 
         """
-        left_index = self.tree.left_index(index)
-        right_index = self.tree.right_index(index)
+        left_index = self.tree._left_index(index)
+        right_index = self.tree._right_index(index)
         tree_size = self.tree.node_count()
         # compare the priority of parent node, left node, and right node and
         # determine which has the highest priority
@@ -49,9 +51,9 @@ class MaxHeap:
             self.tree.swap(index, largest)
             self.heapify(largest)
 
-    def _build_max_heap(self, iterable, priorities):
-        for _, _ in zip(iterable, priorities):
-            pass
+    def _build_max_heap(self, keys, iterable):
+        for key, item in zip(keys, iterable):
+            self.insert(key, item)
 
     def get_max(self):
         return self.tree.root().value
@@ -79,8 +81,8 @@ class MaxHeap:
             raise ValueError("new key is smaller than current key")
         self.tree.set_node(index, HeapItem(key, curr_node.value))
         while index > 0 and self.tree.parent(index).key < self.tree.get_node(index).key:
-            self.tree.swap(index, self.tree.parent_index(index))
-            index = self.tree.parent_index(index)
+            self.tree.swap(index, self.tree._parent_index(index))
+            index = self.tree._parent_index(index)
 
     def insert(self, key, value):
         new_node_idx = self.tree.node_count()
@@ -92,10 +94,7 @@ class MaxHeap:
 
 
 if __name__ == "__main__":
-    values = [(i, i) for i in range(100)]
-    mh = MaxHeap()
-    for idx, val in values:
-        mh.insert(idx, val)
+    mh = MaxHeap(range(100), range(100))
     print(mh.tree)
     sorted_values = [mh.extract_max() for _ in range(mh.size())]
     print(sorted_values)
