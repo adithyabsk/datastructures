@@ -15,8 +15,10 @@ class BinaryTree:
 
     """
 
-    def __init__(self):
+    def __init__(self, root=None):
         self.nodes = []
+        if root is not None:
+            self.nodes.append(root)
 
     def get_node(self, index):
         self._validate_index(index)
@@ -30,44 +32,46 @@ class BinaryTree:
             raise ValueError("index out of range")
         if index != 0:
             try:
-                self.get_node(self._parent_index(index))
+                self.get_node(self.parent_index(index))
             except ValueError:
                 raise ValueError("node does not have parent")
         self._check_extend_internal(index)
         self.nodes[index] = value
 
     def left(self, index):
-        return self.get_node(self._left_index(index))
+        return self.get_node(self.left_index(index))
 
     def right(self, index):
-        return self.get_node(self._right_index(index))
+        return self.get_node(self.right_index(index))
+
+    def set_root(self, value):
+        self._check_extend_internal(0)
+        self.nodes[0] = value
 
     def parent(self, index):
-        return self.get_node(self._parent_index(index))
-
-    def get_str_node(self, index):
-        try:
-            return str(self.get_node(index))
-        except ValueError:
-            return "(null)"
+        return self.get_node(self.parent_index(index))
 
     def is_leaf(self, index):
-        left_index = self._left_index(index)
-        right_index = self._right_index(index)
+        left_index = self.left_index(index)
+        right_index = self.right_index(index)
         return not (
             (left_index < len(self.nodes) and self.nodes[left_index] != sentinel)
             or (right_index < len(self.nodes) and self.nodes[right_index] != sentinel)
         )
 
     def add_left(self, index, value):
-        self._validate_index(index)
-        self._check_extend_internal(index)
-        self.nodes[self._left_index(index)] = value
+        if not self.node_exists(index):
+            raise ValueError("either node does not exist or index out of bounds")
+        new_idx = self.left_index(index)
+        self._check_extend_internal(new_idx)
+        self.nodes[new_idx] = value
 
     def add_right(self, index, value):
-        self._validate_index(index)
-        self._check_extend_internal(index)
-        self.nodes[self._right_index(index)] = value
+        if not self.node_exists(index):
+            raise ValueError("either node does not exist or index out of bounds")
+        new_idx = self.right_index(index)
+        self._check_extend_internal(new_idx)
+        self.nodes[new_idx] = value
 
     def node_count(self):
         return len([n for n in self.nodes if n != sentinel])
@@ -99,16 +103,22 @@ class BinaryTree:
         return True
 
     @staticmethod
-    def _parent_index(index):
+    def parent_index(index):
         return (index - 1) // 2
 
     @staticmethod
-    def _left_index(index):
+    def left_index(index):
         return 2 * index + 1
 
     @staticmethod
-    def _right_index(index):
+    def right_index(index):
         return 2 * index + 2
+
+    def _get_str_node(self, index):
+        try:
+            return str(self.get_node(index))
+        except ValueError:
+            return "(null)"
 
     def _validate_index(self, index):
         if index >= len(self.nodes) or index < 0:
@@ -141,23 +151,24 @@ class BinaryTree:
                 else:
                     rslt += r_template
         if self.node_exists(index):
-            rslt += f"{self.get_str_node(index)}\n"
+            rslt += f"{self._get_str_node(index)}\n"
+            left_exists = self.node_exists(self.left_index(index))
+            right_exists = self.node_exists(self.right_index(index))
             if level >= 1:
-                if is_left:
+                # is left and not only child
+                if is_left and not (left_exists and not right_exists):
                     prepend += prepend_template
                 else:
                     prepend += empty_template
-            left_exists = self.node_exists(self._left_index(index))
-            right_exists = self.node_exists(self._right_index(index))
             rslt += self._node_level_string(
-                self._left_index(index),
+                self.left_index(index),
                 level + 1,
                 prepend,
                 is_left=True,
                 is_only=(left_exists and not right_exists),
             )
             rslt += self._node_level_string(
-                self._right_index(index),
+                self.right_index(index),
                 level + 1,
                 prepend,
                 is_left=False,

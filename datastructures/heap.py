@@ -30,8 +30,8 @@ class MaxHeap:
         greater than or equal to their children.
 
         """
-        left_index = self.tree._left_index(index)
-        right_index = self.tree._right_index(index)
+        left_index = self.tree.left_index(index)
+        right_index = self.tree.right_index(index)
         tree_size = self.tree.node_count()
         # compare the priority of parent node, left node, and right node and
         # determine which has the highest priority
@@ -81,8 +81,8 @@ class MaxHeap:
             raise ValueError("new key is smaller than current key")
         self.tree.set_node(index, HeapItem(key, curr_node.value))
         while index > 0 and self.tree.parent(index).key < self.tree.get_node(index).key:
-            self.tree.swap(index, self.tree._parent_index(index))
-            index = self.tree._parent_index(index)
+            self.tree.swap(index, self.tree.parent_index(index))
+            index = self.tree.parent_index(index)
 
     def insert(self, key, value):
         new_node_idx = self.tree.node_count()

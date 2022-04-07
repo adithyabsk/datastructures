@@ -13,6 +13,12 @@ def test_empty_tree():
     assert pytest.raises(ValueError, bt.get_node, 0)
     assert pytest.raises(ValueError, bt.add_left, 0, 0)
     assert pytest.raises(ValueError, bt.add_right, 0, 0)
+    assert pytest.raises(ValueError, bt.parent, 0)
+    assert pytest.raises(ValueError, bt.left, 0)
+    assert pytest.raises(ValueError, bt.right, 0)
+
+    bt2 = BinaryTree(10)
+    assert bt2.root() == 10
 
 
 def test_get_set_node():
@@ -35,3 +41,95 @@ def test_get_set_node():
     assert bt.get_node(0) == bt.root()
     for node, comp in zip(map(bt.get_node, range(10)), new_data):
         assert node == comp
+
+
+def test_node_relationships():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    bt.nodes = list(range(10))
+
+    assert bt.left(0) == 1
+    assert bt.right(0) == 2
+    assert bt.left(1) == 3
+    assert bt.right(1) == 4
+    assert bt.parent(1) == 0
+    assert bt.parent(2) == 0
+    assert pytest.raises(ValueError, bt.parent, 0)
+
+
+def test_add_nodes_and_count():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree(-1)
+
+    for i in range(10):
+        bt.add_left(i, i + 1)
+        bt.add_right(i, i + 2)
+    assert bt.left(0) == 1
+    assert bt.right(0) == 2
+    assert bt.node_count() == 21
+
+
+def test_print_and_repr():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    input_data = list(range(-100, -90))
+    bt.nodes = input_data
+    template = """-100
+├── -99
+│   ├── -97
+│   │   ├── -93
+│   │   └── -92
+│   └── -96
+│       └•─ -91
+└── -98
+    ├── -95
+    └── -94
+"""
+    template2 = "BinaryTree([-100, -99, -98, -97, -96, -95, -94, -93, -92, -91])"
+    assert str(bt) == template
+    assert repr(bt) == template2
+
+
+def test_lopsided_tree():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    bt.set_root(-1)
+    prev_left = 0
+    for _ in range(5):
+        bt.add_left(prev_left, prev_left)
+        prev_left = bt.left_index(prev_left)
+
+    template = """-1
+└•─ 0
+    └•─ 1
+        └•─ 3
+            └•─ 7
+                └•─ 15
+"""
+
+    assert bt.node_count() == 6
+    assert len(bt.nodes) == 32
+    assert str(bt) == template
+
+    bt2 = BinaryTree()
+    bt2.set_root(-1)
+    prev_right = 0
+    for _ in range(5):
+        bt2.add_right(prev_right, prev_right)
+        prev_right = bt.right_index(prev_right)
+
+    template2 = """-1
+└°─ 0
+    └°─ 2
+        └°─ 6
+            └°─ 14
+                └°─ 30
+"""
+
+    assert bt.node_count() == 6
+    assert len(bt.nodes) == 32
+    assert str(bt2) == template2
