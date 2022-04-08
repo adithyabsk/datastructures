@@ -16,6 +16,7 @@ def test_empty_tree():
     assert pytest.raises(ValueError, bt.parent, 0)
     assert pytest.raises(ValueError, bt.left, 0)
     assert pytest.raises(ValueError, bt.right, 0)
+    assert str(bt) == "(empty)"
 
     bt2 = BinaryTree(10)
     assert bt2.root() == 10
@@ -103,6 +104,11 @@ def test_lopsided_tree():
         bt.add_left(prev_left, prev_left)
         prev_left = bt.left_index(prev_left)
 
+    # try setting node without parent
+    assert pytest.raises(ValueError, bt.set_node, 5, 0)
+    # try checking node that is a sentinel
+    assert not bt.node_exists(5)
+
     template = """-1
 └•─ 0
     └•─ 1
@@ -133,3 +139,41 @@ def test_lopsided_tree():
     assert bt.node_count() == 6
     assert len(bt.nodes) == 32
     assert str(bt2) == template2
+
+
+def test_is_leaf():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    bt.nodes = list(range(10))
+    assert all(not bt.is_leaf(n) for n in range(5))
+    assert all(bt.is_leaf(n) for n in range(5, 10))
+
+
+def test_swap():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    assert pytest.raises(ValueError, bt.swap, 0, 1)
+    bt.nodes = list(range(10))
+    bt.swap(0, 9)
+    assert bt.root() == 9
+    assert bt.get_node(9) == 0
+
+
+def test_remove():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+    bt.nodes = list(range(10))
+    for i in range(5):
+        assert pytest.raises(ValueError, bt.remove, i)
+    for i in reversed(range(5, 10)):
+        bt.remove(i)
+
+    assert bt.node_count() == 5
+
+    for i in reversed(range(0, 5)):
+        bt.remove(i)
+
+    assert bt.node_count() == 0

@@ -28,8 +28,7 @@ class BinaryTree:
             return self.nodes[index]
 
     def set_node(self, index, value):
-        if index < 0:
-            raise ValueError("index out of range")
+        self._validate_index(index)
         if index != 0:
             try:
                 self.get_node(self.parent_index(index))
@@ -77,6 +76,8 @@ class BinaryTree:
         return len([n for n in self.nodes if n != sentinel])
 
     def swap(self, index1, index2):
+        if not (self.node_exists(index1) and self.node_exists(index2)):
+            raise ValueError("both nodes must exist to swap")
         self.nodes[index1], self.nodes[index2] = self.nodes[index2], self.nodes[index1]
 
     def root(self):
@@ -95,9 +96,8 @@ class BinaryTree:
 
     def node_exists(self, index):
         try:
-            node = self.get_node(index)
-            if node == sentinel:
-                return False
+            # note that sentinel checking is covered in get_node
+            self.get_node(index)
         except ValueError:
             return False
         return True
@@ -113,12 +113,6 @@ class BinaryTree:
     @staticmethod
     def right_index(index):
         return 2 * index + 2
-
-    def _get_str_node(self, index):
-        try:
-            return str(self.get_node(index))
-        except ValueError:
-            return "(null)"
 
     def _validate_index(self, index):
         if index >= len(self.nodes) or index < 0:
@@ -151,7 +145,7 @@ class BinaryTree:
                 else:
                     rslt += r_template
         if self.node_exists(index):
-            rslt += f"{self._get_str_node(index)}\n"
+            rslt += f"{self.get_node(index)}\n"
             left_exists = self.node_exists(self.left_index(index))
             right_exists = self.node_exists(self.right_index(index))
             if level >= 1:
