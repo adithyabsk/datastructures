@@ -28,14 +28,19 @@ class BinaryTree:
             return self.nodes[index]
 
     def set_node(self, index, value):
-        self._validate_index(index)
         if index != 0:
+            # note we can set indicies past the current length of `self.nodes`
+            # as long as they have a parent--so we do not use `_validate_index`
+            if index < 0:
+                raise ValueError("index is negative")
             try:
                 self.get_node(self.parent_index(index))
             except ValueError:
                 raise ValueError("node does not have parent")
-        self._check_extend_internal(index)
-        self.nodes[index] = value
+            self._check_extend_internal(index)
+            self.nodes[index] = value
+        else:
+            self.set_root(value)
 
     def left(self, index):
         return self.get_node(self.left_index(index))
