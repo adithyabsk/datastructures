@@ -67,6 +67,16 @@ class MaxHeap:
     def size(self):
         return self.tree.node_count()
 
+    def update_priority(self, index, key):
+        curr_node = self.tree.get_node(index)
+        if key < curr_node.key:
+            self._decrease_key(index, key)
+        elif key > curr_node.key:
+            self._increase_key(index, key)
+        else:
+            # no update required
+            pass
+
     def _sift_down(self, index):
         """Correct the placement of node at index.
 
@@ -105,24 +115,14 @@ class MaxHeap:
     def _increase_key(self, index, key):
         """Bubble nodes upwards until it satisfies the heap property."""
         curr_node = self.tree.get_node(index)
-        if key < curr_node.key:
+        if key < curr_node.key:  # pragma: no cover
             raise ValueError("new key is smaller than current key")
         self.tree.set_node(index, HeapItem(key, curr_node.value))
         self._sift_up(index)
 
     def _decrease_key(self, index, key):
         curr_node = self.tree.get_node(index)
-        if key > curr_node.key:
+        if key > curr_node.key:  # pragma: no cover
             raise ValueError("new key is greater than current key")
         self.tree.set_node(index, HeapItem(key, curr_node.value))
         self._sift_down(index)
-
-    def update_priority(self, index, key):
-        curr_node = self.tree.get_node(index)
-        if key < curr_node.key:
-            self._decrease_key(index, key)
-        elif key > curr_node.key:
-            self._increase_key(index, key)
-        else:
-            # no update required
-            pass
