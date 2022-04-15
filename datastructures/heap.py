@@ -7,10 +7,6 @@ from datastructures.tree import BinaryTree
 HeapItem = namedtuple("HeapItem", ["key", "value"])
 
 
-# TODO: Replace the heapsort algorithm with the inplace version of heapsort. It
-#       currently uses an overhead of O(N) memory
-
-
 def heapsort(iterable, reverse=True):
     if not reverse:
         raise NotImplementedError

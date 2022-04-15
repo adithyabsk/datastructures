@@ -7,6 +7,8 @@
 [Docs](./docs/deque.md)
 * [Fixed Hash Map](./datastructures/fixed_hash_map.py):
 [Docs](./docs/fixed_hash_map.md)
+* [Heap](./datastructures/heap.py):
+[Docs](./docs/heap.md)
 
 ## Installation Instructions
 
