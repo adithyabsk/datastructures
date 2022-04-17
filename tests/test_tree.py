@@ -38,6 +38,9 @@ def test_get_set_node():
     for i, val in enumerate(new_data):
         bt.set_node(i, val)
 
+    # test negative node index
+    assert pytest.raises(ValueError, bt.set_node, -1, 0)
+
     # test that the internal data matches the newly set data
     assert bt.get_node(0) == bt.root()
     for node, comp in zip(map(bt.get_node, range(10)), new_data):
@@ -177,3 +180,24 @@ def test_remove():
         bt.remove(i)
 
     assert bt.node_count() == 0
+
+
+def test_tree_traversal_methods():
+    from datastructures import BinaryTree
+
+    bt = BinaryTree()
+
+    # test empty tree
+    assert bt.breadth_first_search(0) == -1
+    assert bt.depth_first_search(0) == -1
+
+    bt.nodes = list(range(100))
+
+    # test found examples
+    for i in range(100):
+        assert bt.breadth_first_search(i) == i
+        assert bt.depth_first_search(i) == i
+
+    # test cannot find example
+    assert bt.breadth_first_search(-100) == -1
+    assert bt.depth_first_search(-100) == -1

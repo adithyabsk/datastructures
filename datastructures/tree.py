@@ -1,5 +1,9 @@
 """Tree based data structures."""
 
+from collections import deque
+
+# TODO: Use custom deque implementation
+
 # TODO: Update the expand and contract code to double the size of the node
 #       array rather than incrementing it up to the required index size. i.e.
 #       the size should go 2 --> 4 --> 8 and so on. It should also contract in
@@ -29,7 +33,7 @@ class BinaryTree:
 
     def set_node(self, index, value):
         if index != 0:
-            # note we can set indicies past the current length of `self.nodes`
+            # note we can set indices past the current length of `self.nodes`
             # as long as they have a parent--so we do not use `_validate_index`
             if index < 0:
                 raise ValueError("index is negative")
@@ -107,6 +111,54 @@ class BinaryTree:
             return False
         return True
 
+    def breadth_first_traversal(self):
+        queue = deque()
+        if self.node_count() == 0:
+            return
+        explored = {0}
+        queue.append(0)
+        while len(queue) > 0:
+            idx = queue.popleft()
+            yield idx, self.nodes[idx]
+            left_idx = self.left_index(idx)
+            right_idx = self.right_index(idx)
+            if not self._null_index(left_idx) and left_idx not in explored:
+                explored.add(left_idx)
+                queue.append(left_idx)
+            if not self._null_index(right_idx) and right_idx not in explored:
+                explored.add(right_idx)
+                queue.append(right_idx)
+
+    def depth_first_traversal(self):
+        stack = deque()
+        if self.node_count() == 0:
+            return
+        explored = {0}
+        stack.append(0)
+        while len(stack) > 0:
+            idx = stack.pop()
+            yield idx, self.nodes[idx]
+            left_idx = self.left_index(idx)
+            right_idx = self.right_index(idx)
+            if not self._null_index(right_idx) and right_idx not in explored:
+                explored.add(right_idx)
+                stack.append(right_idx)
+            if not self._null_index(left_idx) and left_idx not in explored:
+                explored.add(left_idx)
+                stack.append(left_idx)
+
+    def breadth_first_search(self, target):
+        for i, node in self.breadth_first_traversal():
+            if node == target:
+                return i
+        return -1
+
+    def depth_first_search(self, target):
+        for i, node in self.depth_first_traversal():
+            if node == target:
+                return i
+        return -1
+
     @staticmethod
     def parent_index(index):
         return (index - 1) // 2
@@ -122,6 +174,11 @@ class BinaryTree:
     def _validate_index(self, index):
         if index >= len(self.nodes) or index < 0:
             raise ValueError("index out of range of tree nodes")
+
+    def _null_index(self, index):
+        if index >= len(self.nodes) or index < 0 or self.nodes[index] == sentinel:
+            return True
+        return False
 
     def _check_extend_internal(self, index):
         if index >= len(self.nodes):
