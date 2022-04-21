@@ -290,13 +290,15 @@ class Deque:
         iterate_forward = ((self._total_items - 1) // 2) - index >= 0
         if iterate_forward:
             start_state = self.__state
-            for i, node in enumerate(self._Iterator(self.head, node=True)):
+            for i, node in enumerate(
+                self._Iterator(self.head, node=True)
+            ):  # pragma: no branch
                 self._check_not_mutated(start_state)
                 if i == index:
                     return node
         else:
             start_state = self.__state
-            for i, node in enumerate(
+            for i, node in enumerate(  # pragma: no branch
                 self._Iterator(self.tail, node=True, reverse=True)
             ):
                 self._check_not_mutated(start_state)
@@ -352,9 +354,13 @@ class Deque:
 
     def __lt__(self, other):
         if isinstance(other, Deque):
-            return len(self) < len(other) or (
-                len(self) == len(other) and all(s < o for s, o in zip(self, other))
-            )
+            # look for the first item in `self` that is less than `other`
+            for s, o in zip(self, other):
+                if s != o:
+                    return s < o
+            # if all items are equal, check that the length of `self` is
+            # strictly less than `other`
+            return len(self) < len(other)
         else:
             raise TypeError(
                 f"supported between instances of '{type(self)}' and " f"'{type(other)}'"

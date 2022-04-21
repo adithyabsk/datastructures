@@ -173,7 +173,7 @@ def test_comparisons():
         assert (d == e) == (type(d) == type(e) and list(d) == list(e))
         assert (d != e) == (not (type(d) == type(e) and list(d) == list(e)))
 
-    args = map(Deque, ("", "a", "b", "ab", "ba", "abc", "xba", "xabc", "cba"))
+    args = list(map(Deque, ("", "a", "b", "ab", "ba", "abc", "xba", "xabc", "cba")))
     for x in args:
         for y in args:
             assert (x == y) == (list(x) == list(y))
@@ -182,6 +182,14 @@ def test_comparisons():
             assert (x <= y) == (list(x) <= list(y))
             assert (x > y) == (list(x) > list(y))
             assert (x >= y) == (list(x) >= list(y))
+
+    # check raises
+    a = Deque("abc")
+    other = list("abc")
+    assert pytest.raises(TypeError, a.__lt__, other)
+    assert pytest.raises(TypeError, a.__le__, other)
+    assert pytest.raises(TypeError, a.__gt__, other)
+    assert pytest.raises(TypeError, a.__ge__, other)
 
 
 def test_contains():
@@ -310,11 +318,13 @@ def test_getitem():
     d = Deque("superman")
     assert d[0] == "s"
     assert d[-1] == "n"
+
     d = Deque()
-    with pytest.raises(IndexError):
-        d.__getitem__(0)
-    with pytest.raises(IndexError):
-        d.__getitem__(-1)
+    assert pytest.raises(IndexError, d.__getitem__, 0)
+    assert pytest.raises(IndexError, d.__getitem__, -1)
+
+    other = 1.5
+    assert pytest.raises(TypeError, d.__getitem__, other)
 
 
 def test_index():
@@ -437,6 +447,10 @@ def test_imul():
         assert d == Deque(("abcdef" * n)[-500:])
         assert d.maxlen == 500
 
+    d = Deque()
+    other = 1.5
+    assert pytest.raises(TypeError, d.__imul__, other)
+
 
 def test_mul():
     from datastructures import Deque
@@ -465,6 +479,10 @@ def test_mul():
     assert d * 1 == Deque("abc")
     assert d * 2 == Deque("bcabc")
     assert d * 30 == Deque("bcabc")
+
+    d = Deque()
+    other = 1.5
+    assert pytest.raises(TypeError, d.__mul__, other)
 
 
 def test_setitem():
