@@ -1,5 +1,6 @@
 """min and max heap."""
 
+from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
 from datastructures.tree import BinaryTree
@@ -7,26 +8,27 @@ from datastructures.tree import BinaryTree
 HeapItem = namedtuple("HeapItem", ["key", "value"])
 
 
-def heapsort(iterable, reverse=True):
-    if not reverse:
-        raise NotImplementedError
+def heapsort(iterable, reverse=False):
     # convert iterable to list in case it is a consumable iterable, and pass the
     # data as both key and value
     data = list(iterable)
-    mh = MaxHeap(data, data)
-    return [mh.extract_max() for _ in range(mh.size())]
+    if reverse:
+        heap = MaxHeap(data, data)
+    else:
+        heap = MinHeap(data, data)
+    return [heap.extract_root() for _ in range(heap.size())]
 
 
-class MaxHeap(BinaryTree):
+class BaseHeap(BinaryTree, metaclass=ABCMeta):
     def __init__(self, iterable=None, keys=None):
         super().__init__()
         if keys is not None and iterable is not None:
             self.heapify(keys, iterable)
 
-    def get_max(self):
+    def get_root(self):
         return self.root().value
 
-    def extract_max(self):
+    def extract_root(self):
         if self.node_count() < 1:
             raise ValueError("heap underflow")
         _max = self.root().value
@@ -68,18 +70,48 @@ class MaxHeap(BinaryTree):
             self._decrease_key(index, key)
         elif key > curr_node.key:
             self._increase_key(index, key)
-        else:
-            # no update required
-            pass
+        # else no update required
 
-    def _sift_down(self, index):
+    @abstractmethod
+    def _sift_down(self, index):  # pragma: no cover
         """Correct the placement of node at index.
 
-        This node may be less than it's children which violates the max heap
-        property. The max heap property requires that all parent nodes are
-        greater than or equal to their children.
+        For example, in a max heap this node may be less than it's children
+        which violates the max heap property. The max heap property requires
+        that all parent nodes are greater than or equal to their children.
 
         """
+        pass
+
+    @abstractmethod
+    def _sift_up(self, index):  # pragma: no cover
+        """Bubble nodes upwards until it satisfies the heap property."""
+        pass
+
+    @abstractmethod
+    def _increase_key(self, index, key):  # pragma: no cover
+        """Change the key of the node at index to a larger value."""
+        pass
+
+    @abstractmethod
+    def _decrease_key(self, index, key):  # pragma: no cover
+        """Change the key of the node at index to a smaller value."""
+        pass
+
+
+class MaxHeap(BaseHeap):
+    """Implement a max heap.
+
+    Note the root will always have the largest key.
+
+    In `_sift_down` we find the largest. In `sift_up` we swap if the parent is
+    smaller than the child. In `_increase_key` we call `sift_up` since the new
+    key may be larger than the parent.And, in `_decrease_key`, we call
+    `sift_down` for the opposite reason.
+
+    """
+
+    def _sift_down(self, index):
         left_index = self.left_index(index)
         right_index = self.right_index(index)
         tree_size = self.node_count()
@@ -102,13 +134,11 @@ class MaxHeap(BinaryTree):
             self._sift_down(largest)
 
     def _sift_up(self, index):
-        """Bubble nodes upwards until it satisfies the heap property."""
         while index > 0 and self.parent(index).key < self.get_node(index).key:
             self.swap(index, self.parent_index(index))
             index = self.parent_index(index)
 
     def _increase_key(self, index, key):
-        """Bubble nodes upwards until it satisfies the heap property."""
         curr_node = self.get_node(index)
         if key < curr_node.key:  # pragma: no cover
             raise ValueError("new key is smaller than current key")
@@ -121,3 +151,56 @@ class MaxHeap(BinaryTree):
             raise ValueError("new key is greater than current key")
         self.set_node(index, HeapItem(key, curr_node.value))
         self._sift_down(index)
+
+
+class MinHeap(BaseHeap):
+    """Implement a min heap.
+
+    Note the root will always have the smallest key.
+
+    In `_sift_down` we find the smallest instead of the largest. In `sift_up`
+    we swap if the parent is larger than the child. In `_increase_key` we
+    call `sift_down`. And, in `_decrease_key`, we call `sift_up`.
+
+    """
+
+    def _sift_down(self, index):
+        left_index = self.left_index(index)
+        right_index = self.right_index(index)
+        tree_size = self.node_count()
+        # compare the priority of parent node, left node, and right node and
+        # determine which has the highest priority
+        if (
+            left_index < tree_size
+            and self.get_node(left_index).key < self.get_node(index).key
+        ):
+            smallest = left_index
+        else:
+            smallest = index
+        if (
+            right_index < tree_size
+            and self.get_node(right_index).key < self.get_node(smallest).key
+        ):
+            smallest = right_index
+        if smallest != index:
+            self.swap(index, smallest)
+            self._sift_down(smallest)
+
+    def _sift_up(self, index):
+        while index > 0 and self.parent(index).key > self.get_node(index).key:
+            self.swap(index, self.parent_index(index))
+            index = self.parent_index(index)
+
+    def _increase_key(self, index, key):
+        curr_node = self.get_node(index)
+        if key < curr_node.key:  # pragma: no cover
+            raise ValueError("new key is smaller than current key")
+        self.set_node(index, HeapItem(key, curr_node.value))
+        self._sift_down(index)
+
+    def _decrease_key(self, index, key):
+        curr_node = self.get_node(index)
+        if key > curr_node.key:  # pragma: no cover
+            raise ValueError("new key is greater than current key")
+        self.set_node(index, HeapItem(key, curr_node.value))
+        self._sift_up(index)

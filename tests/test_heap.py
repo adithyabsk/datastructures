@@ -6,27 +6,36 @@ import pytest
 def test_basic():
     import random
 
-    from datastructures import MaxHeap
+    from datastructures import MaxHeap, MinHeap
 
     data = [random.randrange(-100, 100) for _ in range(100)]
     # keys need to be unique otherwise, the ground truth output could end up
     # in a different order when the key is the same
     keys = random.sample(range(-1000, 1000), 100)
 
-    mh = MaxHeap(iterable=data, keys=keys)
-    sorted_values = [mh.extract_max() for _ in range(mh.size())]
+    max_heap = MaxHeap(iterable=data, keys=keys)
+    sorted_values = [max_heap.extract_root() for _ in range(max_heap.size())]
     ground_truth = [d for _, d in sorted(zip(keys, data))]
 
     assert sorted_values == list(reversed(ground_truth))
 
+    min_heap = MinHeap(iterable=data, keys=keys)
+    sorted_values = [min_heap.extract_root() for _ in range(min_heap.size())]
+    ground_truth = [d for _, d in sorted(zip(keys, data))]
+
+    assert sorted_values == list(ground_truth)
+
 
 def test_empty():
-    from datastructures import MaxHeap
+    from datastructures import MaxHeap, MinHeap
 
     # test empty
-    mh = MaxHeap()
-    assert pytest.raises(ValueError, mh.get_max)
-    assert pytest.raises(ValueError, mh.extract_max)
+    max_heap = MaxHeap()
+    min_heap = MinHeap()
+    assert pytest.raises(ValueError, max_heap.get_root)
+    assert pytest.raises(ValueError, max_heap.extract_root)
+    assert pytest.raises(ValueError, min_heap.get_root)
+    assert pytest.raises(ValueError, min_heap.extract_root)
 
 
 def test_heapsort():
@@ -35,54 +44,88 @@ def test_heapsort():
     from datastructures import heapsort
 
     data = [random.randrange(-100, 100) for _ in range(100)]
-    out = heapsort(data)
-    ground_truth = sorted(data, reverse=True)
 
-    assert out == ground_truth
+    out_forward = heapsort(data)
+    ground_truth_forward = sorted(data)
+    assert out_forward == ground_truth_forward
+
+    out_reverse = heapsort(data, reverse=True)
+    ground_truth_reverse = sorted(data, reverse=True)
+    assert out_reverse == ground_truth_reverse
 
 
 def test_heapify():
-    from datastructures import MaxHeap
+    from datastructures import MaxHeap, MinHeap
 
-    mh = MaxHeap()
+    max_heap = MaxHeap()
     data = list(range(10))
-    mh.heapify(reversed(data), data)
+    max_heap.heapify(reversed(data), data)
 
-    assert mh.size() == 10
+    assert max_heap.size() == 10
 
-    out = [mh.extract_max() for _ in range(mh.size())]
+    out = [max_heap.extract_root() for _ in range(max_heap.size())]
+
+    assert data == out
+
+    min_heap = MinHeap()
+    min_heap.heapify(data, data)
+
+    assert min_heap.size() == 10
+
+    out = [min_heap.extract_root() for _ in range(min_heap.size())]
 
     assert data == out
 
 
 def test_insert():
-    from datastructures import MaxHeap
+    from datastructures import MaxHeap, MinHeap
 
-    mh = MaxHeap()
+    max_heap = MaxHeap()
     data = list(range(10))
     for i in data:
-        mh.insert(i, i)
-    out = [mh.extract_max() for _ in range(mh.size())]
+        max_heap.insert(i, i)
+    out = [max_heap.extract_root() for _ in range(max_heap.size())]
 
     assert out == list(reversed(data))
 
+    min_heap = MinHeap()
+    for i in data:
+        min_heap.insert(i, i)
+    out = [min_heap.extract_root() for _ in range(min_heap.size())]
+
+    assert out == list(data)
+
 
 def test_update_priority():
-    from datastructures import MaxHeap
+    from datastructures import MaxHeap, MinHeap
 
     data = list(range(10))
-    mh = MaxHeap(reversed(data), data)
 
+    max_heap = MaxHeap(reversed(data), data)
     # test both increase, decrease, set same priority of indices
-    # also test get_max vs extract_max
+    # also test get_root vs extract_root
     # set the value 0 to priority -1 (previously was 10, should go to the back)
-    mh.update_priority(0, -1)
-    assert mh.get_max() == 1
-    mh.extract_max()
+    max_heap.update_priority(0, -1)
+    assert max_heap.get_root() == 1
+    max_heap.extract_root()
     # set the value 9 to priority 100 (previously was 0, should go to the front)
-    mh.update_priority(mh.size() - 2, 100)
-    assert mh.get_max() == 9
-    mh.extract_max()
+    max_heap.update_priority(max_heap.size() - 2, 100)
+    assert max_heap.get_root() == 9
+    max_heap.extract_root()
     # set the value of 2 to priority (previously was 7, should stay the same)
-    mh.update_priority(0, 7)
-    assert mh.extract_max() == 2
+    max_heap.update_priority(0, 7)
+    assert max_heap.extract_root() == 2
+
+    min_heap = MinHeap(data, data)
+    min_heap.update_priority(0, 100)
+    assert min_heap.get_root() == 1
+    min_heap.extract_root()
+    # set the value 8 to priority -1 (previously was 8, should go to the front)
+    # note, we nodes here since there is a sentinel node in the nodes array
+    # which results in a size that is less than the actual node array
+    min_heap.update_priority(len(min_heap.nodes) - 2, -1)
+    assert min_heap.get_root() == 8
+    min_heap.extract_root()
+    # set the value of 2 to priority (previously was 2, should stay the same)
+    min_heap.update_priority(0, 2)
+    assert min_heap.extract_root() == 2

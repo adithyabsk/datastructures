@@ -16,6 +16,9 @@ less than or equal to its parent.
 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Max-Heap-new.svg" width="50%" alt="Max Heap">
 <!-- markdownlint-restore -->
 
+Note that a [fibonacci heap](https://en.wikipedia.org/wiki/Fibonacci_heap) has a
+better _amortized_ runtime complexity on insert and decrease-key.
+
 ## Implementation
 
 For ease of implementation, the binary heap is usually constructed as an _almost
@@ -44,7 +47,7 @@ aid in this implementation:
 * `_sift_up`
 * `_sift_down`
 * `insert`
-* `extract_max`
+* `extract_root`
 * `heapify`
 
 The `_sift_up` method sends nodes up the tree until the heap property is met.
@@ -62,7 +65,7 @@ The `insert` method adds a new node to the next open slot on the bottom of the
 binary tree. It then calls `_sift_up` on this node. This method has a worst-case
 time complexity of $O(\log(n))$.
 
-The `extract_max` method stores the value of the root node (the max value) and
+The `extract_root` method stores the value of the root node (the max value) and
 then swaps the root with the last element (last node on last row) This node is
 then popped. Lastly, we call `_sift_down` on the root node. This method has a
 worst-case time complexity of $O(\log(n))$.
@@ -98,4 +101,7 @@ algorithm. It has the following steps:
 This has a runtime of $O(n \log(n))$. Although `heapify` runs in $O(n)$, we
 still need to run `_sift_down` $n$ times to extract the maxes. In our source
 code, we choose not to adhere to the in place max extraction for ease of
-implementation.
+implementation. Also, note that heap sort is not a stable sorting algorithm
+because it does not maintain the relative order of elements after sorting. In
+other words, when two items have the same key, it is an implementation detail as
+to which order they will end up.
