@@ -66,4 +66,4 @@ venv.bak/
 .DS_Store
 
 # Other
-.idea
+.idea/*
