@@ -9,8 +9,6 @@ from collections import deque
 #       the size should go 2 --> 4 --> 8 and so on. It should also contract in
 #       similar fashion.
 
-sentinel = object()
-
 
 class BinaryTree:
     """Binary Tree data structure that stores nodes linearly in an array.
@@ -19,6 +17,8 @@ class BinaryTree:
 
     """
 
+    _sentinel = object()
+
     def __init__(self, root=None):
         self.nodes = []
         if root is not None:
@@ -26,7 +26,7 @@ class BinaryTree:
 
     def get_node(self, index):
         self._validate_index(index)
-        if self.nodes[index] == sentinel:
+        if self.nodes[index] == self._sentinel:
             raise ValueError("index is null")
         else:
             return self.nodes[index]
@@ -63,8 +63,11 @@ class BinaryTree:
         left_index = self.left_index(index)
         right_index = self.right_index(index)
         return not (
-            (left_index < len(self.nodes) and self.nodes[left_index] != sentinel)
-            or (right_index < len(self.nodes) and self.nodes[right_index] != sentinel)
+            (left_index < len(self.nodes) and self.nodes[left_index] != self._sentinel)
+            or (
+                right_index < len(self.nodes)
+                and self.nodes[right_index] != self._sentinel
+            )
         )
 
     def add_left(self, index, value):
@@ -82,7 +85,7 @@ class BinaryTree:
         self.nodes[new_idx] = value
 
     def node_count(self):
-        return len([n for n in self.nodes if n != sentinel])
+        return len([n for n in self.nodes if n != self._sentinel])
 
     def swap(self, index1, index2):
         if not (self.node_exists(index1) and self.node_exists(index2)):
@@ -98,7 +101,7 @@ class BinaryTree:
     def remove(self, index):
         self._validate_index(index)
         if self.is_leaf(index):
-            self.nodes[index] = sentinel
+            self.nodes[index] = self._sentinel
             self._cleanup()
         else:
             raise ValueError("cannot remove non-leaf node")
@@ -176,14 +179,14 @@ class BinaryTree:
             raise ValueError("index out of range of tree nodes")
 
     def _null_index(self, index):
-        if index >= len(self.nodes) or index < 0 or self.nodes[index] == sentinel:
+        if index >= len(self.nodes) or index < 0 or self.nodes[index] == self._sentinel:
             return True
         return False
 
     def _check_extend_internal(self, index):
         if index >= len(self.nodes):
             extend_count = (index + 1) - len(self.nodes)
-            self.nodes.extend([sentinel] * extend_count)
+            self.nodes.extend([self._sentinel] * extend_count)
 
     def _node_level_string(
         self, index, level=0, prepend="", is_left=True, is_only=False
@@ -244,11 +247,11 @@ class BinaryTree:
         """
         # intentionally exclude the 0th index
         for i in range(len(self.nodes) - 1, 0, -1):
-            if self.nodes[i] == self.nodes[i - 1] == sentinel:
+            if self.nodes[i] == self.nodes[i - 1] == self._sentinel:
                 del self.nodes[i]
             else:
                 break
-        if len(self.nodes) == 1 and self.root() == sentinel:
+        if len(self.nodes) == 1 and self.root() == self._sentinel:
             del self.nodes[0]
 
     def __str__(self):

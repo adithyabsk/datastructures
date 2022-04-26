@@ -64,8 +64,10 @@ class BaseHeap(BinaryTree, metaclass=ABCMeta):
     def size(self):
         return self.node_count()
 
-    def update_priority(self, index, key):
+    def update_index_priority(self, index, key):
         curr_node = self.get_node(index)
+        # we don't update value2idx because that is handled through calls to
+        # set_node
         if key < curr_node.key:
             self._decrease_key(index, key)
         elif key > curr_node.key:
@@ -204,3 +206,65 @@ class MinHeap(BaseHeap):
             raise ValueError("new key is greater than current key")
         self.set_node(index, HeapItem(key, curr_node.value))
         self._sift_up(index)
+
+
+class PriorityQueue(MinHeap):
+    """A priority queue based on MinHeap.
+
+    Lower key values indicate higher priority. Implements a way to lookup items
+    and their priorities by value. This means that each item in the priority
+    queue must be unique. This results in the ability to change the priority of
+    any item in O(log n) runtime.
+
+    """
+
+    def __init__(self, iterable=None, keys=None):
+        self.value2idx = {}
+        super().__init__(iterable, keys)
+
+    @property
+    def nodes(self):
+        return self._nodes
+
+    @nodes.setter
+    def nodes(self, iterable):
+        # this hook is useful so that value2idx is specified any time we
+        # manually set `nodes` as in `heapify`
+        self._nodes = iterable
+        for i, heap_item in enumerate(iterable):
+            self.value2idx[heap_item.value] = i
+
+    def swap(self, index1, index2):
+        # handle updating the key/index look up table before actually swapping
+        # the nodes
+        self.value2idx[self.nodes[index1].value] = index2
+        self.value2idx[self.nodes[index2].value] = index1
+        super().swap(index1, index2)
+
+    def remove(self, index):
+        del self.value2idx[self.nodes[index].value]
+        super().remove(index)
+
+    def set_node(self, index, value):
+        try:
+            # delete the old val/index mapping
+            del self.value2idx[self.nodes[index].value]
+        except IndexError:
+            # if it is a new index then skip
+            pass
+        self.value2idx[value.value] = index
+        super().set_node(index, value)
+
+    def update_value_priority(self, value, key):
+        # this is required for dijkstra's
+        if value in self.value2idx:
+            index = self.value2idx[value][0]
+            old_key = self.nodes[index]
+            # we don't update value2idx because that is handled through calls to
+            # set_node
+            if key < old_key:
+                self._decrease_key(index, key)
+            elif key > old_key:
+                self._increase_key(index, key)
+        else:
+            raise ValueError(f"{value} not found in tree location lookup table")

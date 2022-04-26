@@ -105,27 +105,27 @@ def test_update_priority():
     # test both increase, decrease, set same priority of indices
     # also test get_root vs extract_root
     # set the value 0 to priority -1 (previously was 10, should go to the back)
-    max_heap.update_priority(0, -1)
+    max_heap.update_index_priority(0, -1)
     assert max_heap.get_root() == 1
     max_heap.extract_root()
     # set the value 9 to priority 100 (previously was 0, should go to the front)
-    max_heap.update_priority(max_heap.size() - 2, 100)
+    max_heap.update_index_priority(max_heap.size() - 2, 100)
     assert max_heap.get_root() == 9
     max_heap.extract_root()
     # set the value of 2 to priority (previously was 7, should stay the same)
-    max_heap.update_priority(0, 7)
+    max_heap.update_index_priority(0, 7)
     assert max_heap.extract_root() == 2
 
     min_heap = MinHeap(data, data)
-    min_heap.update_priority(0, 100)
+    min_heap.update_index_priority(0, 100)
     assert min_heap.get_root() == 1
     min_heap.extract_root()
     # set the value 8 to priority -1 (previously was 8, should go to the front)
     # note, we nodes here since there is a sentinel node in the nodes array
     # which results in a size that is less than the actual node array
-    min_heap.update_priority(len(min_heap.nodes) - 2, -1)
+    min_heap.update_index_priority(len(min_heap.nodes) - 2, -1)
     assert min_heap.get_root() == 8
     min_heap.extract_root()
     # set the value of 2 to priority (previously was 2, should stay the same)
-    min_heap.update_priority(0, 2)
+    min_heap.update_index_priority(0, 2)
     assert min_heap.extract_root() == 2
