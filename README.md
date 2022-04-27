@@ -3,12 +3,12 @@
 [![build](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml)
 [![coverage](./coverage.svg)](https://github.com/adithyabsk/datastructures/actions/workflows/build.yaml)
 
-* [Deque](./datastructures/deque.py):
-[Docs](./docs/deque.md)
-* [Fixed Hash Map](./datastructures/fixed_hash_map.py):
-[Docs](./docs/fixed_hash_map.md)
-* [Heap](./datastructures/heap.py):
-[Docs](./docs/heap.md)
+* [`Deque` Source](./datastructures/deque.py)
+  * [Docs](./docs/deque.md)
+* [`FixedHashMap` Source](./datastructures/fixed_hash_map.py)
+  * [Docs](./docs/fixed_hash_map.md)
+* [`MinHeap`, `MaxHeap`, `PriorityQueue` Source](./datastructures/heap.py)
+  * [Docs](./docs/heap.md)
 
 ## Installation Instructions
 
