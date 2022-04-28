@@ -100,6 +100,9 @@ class BaseHeap(BinaryTree, metaclass=ABCMeta):
         """Change the key of the node at index to a smaller value."""
         pass
 
+    def __len__(self):
+        return self.size()
+
 
 class MaxHeap(BaseHeap):
     """Implement a max heap.

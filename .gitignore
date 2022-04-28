@@ -62,6 +62,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# pytest
+.pytest_cache/
+
 # macOS
 .DS_Store
 

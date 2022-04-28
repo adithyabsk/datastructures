@@ -16,6 +16,12 @@
 pip install .
 ```
 
+### Graph Visualizations (optional)
+
+```shell
+pip install .[graph]
+```
+
 ## Developers
 
 * Install [`pre-commit`](https://pre-commit.com/)

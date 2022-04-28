@@ -7,6 +7,12 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+matplotlib = {version = "^3.5.1", optional = true}
+networkx = {version = "^2.8", optional = true, extras = ["extra"]}
+
+
+[tool.poetry.extras]
+graph = ["networkx", "matplotlib"]
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
