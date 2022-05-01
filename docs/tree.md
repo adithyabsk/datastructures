@@ -58,8 +58,8 @@ rather than the levels, as in breadth first traversal. The order of the nodes
 depends on the type of depth first traversal. There are three main types:
 
 * Pre-order (node, left, right)
-* In-order (left, right, node)
-* Post-order (left, node, right)
+* In-order (left, node, right)
+* Post-order (left, right, node)
 
 ![Binary Tree Traversal](https://upload.wikimedia.org/wikipedia/commons/7/75/Sorted_binary_tree_ALL_RGB.svg)
 

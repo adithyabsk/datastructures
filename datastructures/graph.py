@@ -1,7 +1,7 @@
 """Dijkstra's algorithm for a weighted graph."""
 
 from collections import deque
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from datastructures import PriorityQueue
 
@@ -40,7 +40,7 @@ class SimpleGraph:
         if not directed:
             self.adj_mat[target][source] = weight
 
-    def dijkstra_path(self, source: int):
+    def dijkstra_path(self, source: int) -> Tuple[List[float], List[Optional[int]]]:
         dist = [float("inf") for _ in range(self.size)]
         prev = [None for _ in range(self.size)]
         dist[source] = 0
@@ -65,7 +65,8 @@ class SimpleGraph:
 
         return dist, prev
 
-    def shortest_path(self, source: int, target: int, dist: List[int], prev: List[int]):
+    @staticmethod
+    def shortest_path(source: int, target: int, prev: List[int]):
         seq = deque()
         u = target
         if prev[u] is not None or u == source:
@@ -75,44 +76,20 @@ class SimpleGraph:
 
         return seq
 
-    def visualize(self):
+    def visualize(self):  # pragma: no cover
         try:
             import matplotlib.pyplot as plt
             import networkx as nx
             import numpy as np
 
             G = nx.from_numpy_matrix(np.array(self.adj_mat))
-            pos = nx.nx_agraph.graphviz_layout(G)  # requires graphviz installation
+            # requires graphviz installation
+            pos = nx.nx_agraph.graphviz_layout(G)
+            # note: you need to manually hint to networkx, when the graph is directed
+            #       to specify which edges are actually directed vs undirected
             nx.draw_networkx(G, pos)
             labels = nx.get_edge_attributes(G, "weight")
             nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
             plt.show()
         except ImportError:  # pragma: no cover
             raise ValueError("please install the [graph] extras")
-
-
-if __name__ == "__main__":
-    graph = SimpleGraph(9)
-    graph.set_edge_weight(0, 1, 4)
-    graph.set_edge_weight(0, 6, 7)
-    graph.set_edge_weight(1, 6, 11)
-    graph.set_edge_weight(1, 7, 20)
-    graph.set_edge_weight(1, 2, 9)
-    graph.set_edge_weight(2, 3, 6)
-    graph.set_edge_weight(2, 4, 2)
-    graph.set_edge_weight(3, 4, 10)
-    graph.set_edge_weight(3, 5, 5)
-    graph.set_edge_weight(4, 5, 15)
-    graph.set_edge_weight(4, 7, 1)
-    graph.set_edge_weight(4, 8, 5)
-    graph.set_edge_weight(5, 8, 12)
-    graph.set_edge_weight(6, 7, 1)
-    graph.set_edge_weight(7, 8, 3)
-
-    from pprint import pprint
-
-    dist, prev = graph.dijkstra_path(0)
-    pprint(dist)
-    pprint(prev)
-    pprint(graph.shortest_path(0, 5, dist, prev))
-    graph.visualize()
