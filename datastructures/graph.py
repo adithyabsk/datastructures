@@ -3,7 +3,7 @@
 from collections import deque
 from typing import List, Optional, Tuple
 
-from datastructures import PriorityQueue
+from .heap import PriorityQueue
 
 
 class SimpleGraph:

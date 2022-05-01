@@ -3,7 +3,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
-from datastructures.tree import BinaryTree
+from .tree import BinaryTree
 
 HeapItem = namedtuple("HeapItem", ["key", "value"])
 
