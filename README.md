@@ -7,8 +7,10 @@
   * [Docs](./docs/deque.md)
 * [`FixedHashMap` Source](./datastructures/fixed_hash_map.py)
   * [Docs](./docs/fixed_hash_map.md)
-* [`MinHeap`, `MaxHeap`, `PriorityQueue` Source](./datastructures/heap.py)
+* [`MinHeap`, `MaxHeap`, `PriorityQueue`, `heapsort` Source](./datastructures/heap.py)
   * [Docs](./docs/heap.md)
+* [`SimpleGraph`, `dijkstra_path` Source](./datastructures/graph.py)
+  * [Docs](./docs/graph.md)
 
 ## Installation Instructions
 
