@@ -81,7 +81,6 @@ function Dijkstra(Graph, source):
 
         Q.add_with_priority(v, dist[v])
 
-
     while Q is not empty:                      // The main loop
         u ← Q.extract_min()                    // Remove and return best vertex
         for each neighbor v of u:              // only v that are still in Q
