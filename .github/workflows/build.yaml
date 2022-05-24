@@ -26,9 +26,13 @@ jobs:
         with:
           python-version: '3.8'
           cache: 'pip'
+      # Core poetry issue: https://github.com/python-poetry/poetry/issues/3472
+      # Work around until https://github.com/pypa/pip/issues/9243 is merged
+      # remove the `--no-deps` flag once it is closed. This flag disables the
+      # pip resolver
       - run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --no-deps -r requirements.txt
           pip install -e .
 
       - name: Run tests
